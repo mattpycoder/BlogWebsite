@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block title %}BlogHub — Write. Share. Discover.{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container">
+
+            <h1 class="hero-title">
+                Write. Share. Discover.
+            </h1>
+
+            <p class="hero-subtitle">
+                A simple place for your ideas, stories, and knowledge.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="/create-post" class="btn btn-primary">
+                    Start Writing
+                </a>
+
+                <a href="/popular" class="btn btn-outline">
+                    Explore Blogs
+                </a>
+            </div>
+
+        </div>
+    </header>
+
+
+    <main class="container">
+
+        <!-- Popular Blogs -->
+        <section class="section">
+
+            <div class="section-header">
+
+                <h2 class="section-title">
+                    Popular Blogs
+                </h2>
+
+                <a href="/popular" class="nav-link">
+                    View all →
+                </a>
+
+            </div>
+
+
+            <div class="blogs-grid">
+
+                <!-- Blog Card 1 -->
+                <article
+                    class="blog-card"
+                    hx-get="/api/blogs/1"
+                    hx-trigger="click queue:first"
+                >
+
+                    <div class="blog-card-header">
+
+                        <div class="avatar">
+                            M
+                        </div>
+
+                        <div>
+                            <h3 class="blog-card-title">
+                                Martun's Tech Lab
+                            </h3>
+
+                            <span class="author-name">
+                                by @martun
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <p class="blog-card-desc">
+                        Software development, Python, Flask,
+                        and practical systemic architectures.
+                    </p>
+
+                    <a
+                        href="/blog/martun"
+                        class="btn btn-outline blog-button"
+                    >
+                        Visit Blog
+                    </a>
+
+                </article>
+
+
+                <!-- Blog Card 2 -->
+                <article class="blog-card">
+
+                    <div class="blog-card-header">
+
+                        <div class="avatar">
+                            S
+                        </div>
+
+                        <div>
+                            <h3 class="blog-card-title">
+                                Design Thoughts
+                            </h3>
+
+                            <span class="author-name">
+                                by @sarah_ui
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <p class="blog-card-desc">
+                        Deep dives into minimalist UI components,
+                        typography, and frontend accessibility.
+                    </p>
+
+                    <a
+                        href="/blog/sarah_ui"
+                        class="btn btn-outline blog-button"
+                    >
+                        Visit Blog
+                    </a>
+
+                </article>
+
+
+                <!-- Blog Card 3 -->
+                <article class="blog-card">
+
+                    <div class="blog-card-header">
+
+                        <div class="avatar">
+                            A
+                        </div>
+
+                        <div>
+                            <h3 class="blog-card-title">
+                                Data & Systems
+                            </h3>
+
+                            <span class="author-name">
+                                by @alex_dev
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <p class="blog-card-desc">
+                        Breaking down database optimization techniques,
+                        backend engineering, and API design patterns.
+                    </p>
+
+                    <a
+                        href="/blog/alex_dev"
+                        class="btn btn-outline blog-button"
+                    >
+                        Visit Blog
+                    </a>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- Latest Posts -->
+        <section class="section latest-section">
+
+            <div class="section-header">
+
+                <h2 class="section-title">
+                    Latest Posts
+                </h2>
+
+            </div>
+
+
+            <div class="posts-grid">
+
+                <!-- Post 1 -->
+                <article class="post-card">
+
+                    <div>
+
+                        <div class="post-meta-author">
+
+                            <div class="avatar avatar-sm">
+                                M
+                            </div>
+
+                            <span class="author-name">
+                                Martun
+                            </span>
+
+                        </div>
+
+
+                        <h3 class="post-title">
+
+                            <a href="/post/clean-web-interfaces">
+                                Building Clean Web Interfaces
+                                Without Heavy Frameworks
+                            </a>
+
+                        </h3>
+
+
+                        <p class="post-desc">
+                            Why vanilla JavaScript paired with lightweight
+                            HTMX tools often outperforms complex
+                            single-page application setups for modern
+                            content platforms.
+                        </p>
+
+                    </div>
+
+
+                    <div class="post-meta-stats">
+
+                        <span>Oct 14</span>
+
+                        <span>•</span>
+
+                        <span>5 min read</span>
+
+                        <span>•</span>
+
+                        <span>1.2k views</span>
+
+                        <span>•</span>
+
+                        <span>18 comments</span>
+
+                        <button
+                            class="like-btn"
+                            onclick="toggleLike(this)"
+                        >
+                            ♥
+                            <span class="like-count">
+                                42
+                            </span>
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <!-- Post 2 -->
+                <article class="post-card">
+
+                    <div>
+
+                        <div class="post-meta-author">
+
+                            <div class="avatar avatar-sm">
+                                S
+                            </div>
+
+                            <span class="author-name">
+                                Sarah Jenkins
+                            </span>
+
+                        </div>
+
+
+                        <h3 class="post-title">
+
+                            <a href="/post/minimalist-ui">
+                                The Modern Art of Minimalist UI Layouts
+                            </a>
+
+                        </h3>
+
+
+                        <p class="post-desc">
+                            How consistent spacing systems,
+                            functional typography, and subtle contrast
+                            create interfaces that feel calm and intuitive.
+                        </p>
+
+                    </div>
+
+
+                    <div class="post-meta-stats">
+
+                        <span>Oct 12</span>
+
+                        <span>•</span>
+
+                        <span>4 min read</span>
+
+                        <span>•</span>
+
+                        <span>890 views</span>
+
+                        <span>•</span>
+
+                        <span>7 comments</span>
+
+                        <button
+                            class="like-btn"
+                            onclick="toggleLike(this)"
+                        >
+                            ♥
+                            <span class="like-count">
+                                29
+                            </span>
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <!-- Post 3 -->
+                <article class="post-card">
+
+                    <div>
+
+                        <div class="post-meta-author">
+
+                            <div class="avatar avatar-sm">
+                                A
+                            </div>
+
+                            <span class="author-name">
+                                Alex Miller
+                            </span>
+
+                        </div>
+
+
+                        <h3 class="post-title">
+
+                            <a href="/post/python-applications">
+                                Structuring Modern Python
+                                Applications Efficiently
+                            </a>
+
+                        </h3>
+
+
+                        <p class="post-desc">
+                            A pragmatic guide on structuring application
+                            factories, template blueprints, and database
+                            models to scale your web applications.
+                        </p>
+
+                    </div>
+
+
+                    <div class="post-meta-stats">
+
+                        <span>Oct 10</span>
+
+                        <span>•</span>
+
+                        <span>8 min read</span>
+
+                        <span>•</span>
+
+                        <span>2.4k views</span>
+
+                        <span>•</span>
+
+                        <span>34 comments</span>
+
+                        <button
+                            class="like-btn"
+                            onclick="toggleLike(this)"
+                        >
+                            ♥
+                            <span class="like-count">
+                                104
+                            </span>
+                        </button>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function toggleLike(button) {
+            button.classList.toggle("liked");
+
+            const countSpan = button.querySelector(".like-count");
+            let currentLikes = parseInt(countSpan.textContent, 10);
+
+            if (button.classList.contains("liked")) {
+                countSpan.textContent = currentLikes + 1;
+            } else {
+                countSpan.textContent = currentLikes - 1;
+            }
+        }
+    </script>
+{% endblock %}
