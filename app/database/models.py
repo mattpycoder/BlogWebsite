@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from flask_login import UserMixin
@@ -16,6 +17,11 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
     last_name = db.Column(db.String(100), nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
 
     @staticmethod
     def push_user_into_db(user: User) -> None:
@@ -23,10 +29,15 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
         db.session.commit()
 
     @staticmethod
-    def is_field_exists_in_db(**kwargs: dict[str, Any]) -> bool:
+    def is_field_in_db(**kwargs: Any) -> bool:
         return User.query.filter_by(**kwargs).first()
 
     @staticmethod
-    def get_user_by_email_from_db(email: str) -> User | None:
+    def get_user_from_db_by_email(email: str) -> User | None:
         user = User.query.filter_by(email=email).first()
+        return user
+
+    @staticmethod
+    def get_user_from_db_by_username(username: str) -> User | None:
+        user = User.query.filter_by(username=username).first()
         return user

@@ -30,9 +30,9 @@
 
                 <!-- Email -->
                 <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
+                    <label class="form-label" for="email">Username / Email</label>
                     {% if form and form.email %}
-                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="you@example.com", autocomplete="email") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="Enter username or email", autocomplete="email") }}
                         {% if form.email.errors %}
                             <div class="form-error">{{ form.email.errors[0] }}</div>
                         {% endif %}
