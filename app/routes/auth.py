@@ -25,7 +25,7 @@ def login() -> str | Response:
     return render_template("login.html", form=login_form)
 
 
-@auth.route("/logout", methods=["GET"])
+@auth.route("/logout", methods=["POST"])
 @login_required
 def logout() -> Response:
     logout_user()

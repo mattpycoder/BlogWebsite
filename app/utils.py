@@ -1,4 +1,4 @@
-from app.database.extensions import bcrypt
+from app.extensions import bcrypt
 
 
 def hash_password(password: str) -> str:

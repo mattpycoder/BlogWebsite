@@ -7,7 +7,7 @@ from app.database.models import User
 profile_bp = Blueprint("profile", __name__)
 
 
-@profile_bp.route("/profile/<username>", methods=["GET"])
+@profile_bp.route("/<username>/profile", methods=["GET"])
 @login_required
 def profile(username: str) -> Response | str:
     if User.is_field_in_db(username=username):

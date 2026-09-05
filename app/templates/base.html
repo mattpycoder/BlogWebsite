@@ -49,9 +49,12 @@
                         </span>
                         <span>{{ current_user.username }}</span>
                     </a>
-                    <a href="/logout" class="btn btn-text">
+                <form method="POST" action="{{ url_for('auth.logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button name="logout" class="btn btn-text">
                         Logout
-                    </a>
+                    </button>
+                </form>
                 {% else %}
                     <a href="/login" class="btn btn-text">
                         Login
