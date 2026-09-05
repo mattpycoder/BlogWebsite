@@ -4,21 +4,22 @@ from datetime import UTC, datetime
 from typing import Any
 
 from flask_login import UserMixin
+from sqlalchemy.orm import Mapped
+from sqlalchemy.testing.schema import mapped_column
 
-from app.database.extensions import db
+from app.extensions import db
 
 
 class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    first_name = db.Column(db.String(100), nullable=True)
-    last_name = db.Column(db.String(100), nullable=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(
-        db.DateTime(timezone=True),
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(unique=True, nullable=False)
+    first_name: Mapped[str] = mapped_column(nullable=True)
+    last_name: Mapped[str] = mapped_column(nullable=True)
+    email: Mapped[str] = mapped_column(unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
@@ -30,14 +31,12 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
 
     @staticmethod
     def is_field_in_db(**kwargs: Any) -> bool:
-        return User.query.filter_by(**kwargs).first()
+        return db.session.scalar(db.select(User).filter_by(**kwargs)) is not None
 
     @staticmethod
     def get_user_from_db_by_email(email: str) -> User | None:
-        user = User.query.filter_by(email=email).first()
-        return user
+        return db.session.scalar(db.select(User).filter_by(email=email))
 
     @staticmethod
     def get_user_from_db_by_username(username: str) -> User | None:
-        user = User.query.filter_by(username=username).first()
-        return user
+        return db.session.scalar(db.select(User).filter_by(username=username))
