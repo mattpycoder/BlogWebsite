@@ -12,108 +12,139 @@
                 <p class="auth-subtitle">Join BlogHub to write, share, and discover stories.</p>
             </div>
 
-            {% if form.errors %}
-            <div class="alert alert-danger" role="alert">
-                <div>
-                    {% for field, errors in form.errors.items() %}
-                    <div>{{ ', '.join(errors) }}</div>
-                    {% endfor %}
+            {% if form and form.errors and not (form.first_name.errors or form.last_name.errors or form.username.errors or form.email.errors or form.password.errors or form.confirm_password.errors) %}
+                <div class="alert alert-danger" role="alert">
+                    <div>
+                        {% for field, errors in form.errors.items() %}
+                            <div>{{ ', '.join(errors) }}</div>
+                        {% endfor %}
+                    </div>
+                    <button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close alert">×</button>
                 </div>
-                <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
-            </div>
             {% endif %}
 
             <form class="auth-form" method="POST" action="/register" novalidate>
-                {{ form.csrf_token() }}
+                {% if form %}
+                    {{ form.csrf_token() }}
+                {% else %}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% endif %}
 
                 <!-- First & Last Name -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-grid-2">
                     <div class="form-group">
-                        <label class="form-label" for="first_name">{{ form.first_name.label.text }}</label>
-                        {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else ""),
-                        id="first_name", placeholder="e.g. John", autocomplete="given-name") }}
-                        {% if form.first_name.errors %}
-                        <div class="form-error">{{ form.first_name.errors[0] }}</div>
+                        <label class="form-label" for="first_name">
+                            {{ form.first_name.label.text if form and form.first_name else 'First Name' }}
+                        </label>
+                        {% if form and form.first_name %}
+                            {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else ""), id="first_name", placeholder="e.g. John", autocomplete="given-name") }}
+                            {% if form.first_name.errors %}
+                                <div class="form-error">{{ form.first_name.errors[0] }}</div>
+                            {% endif %}
+                        {% else %}
+                            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="e.g. John" autocomplete="given-name">
                         {% endif %}
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="last_name">{{ form.last_name.label.text }}</label>
-                        {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else ""),
-                        id="last_name", placeholder="e.g. Doe", autocomplete="family-name") }}
-                        {% if form.last_name.errors %}
-                        <div class="form-error">{{ form.last_name.errors[0] }}</div>
+                        <label class="form-label" for="last_name">
+                            {{ form.last_name.label.text if form and form.last_name else 'Last Name' }}
+                        </label>
+                        {% if form and form.last_name %}
+                            {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else ""), id="last_name", placeholder="e.g. Doe", autocomplete="family-name") }}
+                            {% if form.last_name.errors %}
+                                <div class="form-error">{{ form.last_name.errors[0] }}</div>
+                            {% endif %}
+                        {% else %}
+                            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="e.g. Doe" autocomplete="family-name">
                         {% endif %}
                     </div>
                 </div>
 
                 <!-- Username -->
                 <div class="form-group">
-                    <label class="form-label" for="username">{{ form.username.label.text }}</label>
-                    {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""),
-                    id="username", placeholder="e.g. alex_dev", autocomplete="username") }}
-                    {% if form.username.errors %}
-                    <div class="form-error">{{ form.username.errors[0] }}</div>
+                    <label class="form-label" for="username">
+                        {{ form.username.label.text if form and form.username else 'Username' }}
+                    </label>
+                    {% if form and form.username %}
+                        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""), id="username", placeholder="e.g. alex_dev", autocomplete="username") }}
+                        {% if form.username.errors %}
+                            <div class="form-error">{{ form.username.errors[0] }}</div>
+                        {% endif %}
+                    {% else %}
+                        <input type="text" class="form-control" id="username" name="username" placeholder="e.g. alex_dev" required autocomplete="username">
                     {% endif %}
                 </div>
 
                 <!-- Email -->
                 <div class="form-group">
-                    <label class="form-label" for="email">{{ form.email.label.text }}</label>
-                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email",
-                    placeholder="you@example.com", autocomplete="email") }}
-                    {% if form.email.errors %}
-                    <div class="form-error">{{ form.email.errors[0] }}</div>
+                    <label class="form-label" for="email">
+                        {{ form.email.label.text if form and form.email else 'Email' }}
+                    </label>
+                    {% if form and form.email %}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="you@example.com", autocomplete="email") }}
+                        {% if form.email.errors %}
+                            <div class="form-error">{{ form.email.errors[0] }}</div>
+                        {% endif %}
+                    {% else %}
+                        <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
                     {% endif %}
                 </div>
 
                 <!-- Password -->
                 <div class="form-group">
-                    <label class="form-label" for="password">{{ form.password.label.text }}</label>
+                    <label class="form-label" for="password">
+                        {{ form.password.label.text if form and form.password else 'Password' }}
+                    </label>
                     <div class="input-with-icon">
-                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
-                        id="password", placeholder="At least 8 characters", autocomplete="new-password") }}
-                        <button type="button" class="password-toggle-btn"
-                            onclick="togglePasswordVisibility('password', this)"
-                            aria-label="Toggle password visibility">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        {% if form and form.password %}
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), id="password", placeholder="At least 8 characters", autocomplete="new-password") }}
+                        {% else %}
+                            <input type="password" class="form-control" id="password" name="password" placeholder="At least 8 characters" required autocomplete="new-password">
+                        {% endif %}
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" aria-label="Toggle password visibility">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                         </button>
                     </div>
-                    {% if form.password.errors %}
-                    <div class="form-error">{{ form.password.errors[0] }}</div>
+                    {% if form and form.password and form.password.errors %}
+                        <div class="form-error">{{ form.password.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <!-- Confirm Password -->
                 <div class="form-group">
-                    <label class="form-label" for="confirm_password">{{ form.confirm_password.label.text }}</label>
+                    <label class="form-label" for="confirm_password">
+                        {{ form.confirm_password.label.text if form and form.confirm_password else 'Confirm Password' }}
+                    </label>
                     <div class="input-with-icon">
-                        {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors
-                        else ""), id="confirm_password", placeholder="Re-enter your password",
-                        autocomplete="new-password") }}
-                        <button type="button" class="password-toggle-btn"
-                            onclick="togglePasswordVisibility('confirm_password', this)"
-                            aria-label="Toggle password visibility">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        {% if form and form.confirm_password %}
+                            {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""), id="confirm_password", placeholder="Re-enter your password", autocomplete="new-password") }}
+                        {% else %}
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter your password" required autocomplete="new-password">
+                        {% endif %}
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirm_password', this)" aria-label="Toggle password visibility">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                         </button>
                     </div>
-                    {% if form.confirm_password.errors %}
-                    <div class="form-error">{{ form.confirm_password.errors[0] }}</div>
+                    {% if form and form.confirm_password and form.confirm_password.errors %}
+                        <div class="form-error">{{ form.confirm_password.errors[0] }}</div>
                     {% endif %}
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="btn btn-primary btn-block">
-                    Create Account
-                </button>
+                {% if form and form.submit %}
+                    {{ form.submit(class="btn btn-primary btn-block btn-lg", value="Create Account", style="margin-top: 0.5rem;") }}
+                {% else %}
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 0.5rem;">
+                        Create Account
+                    </button>
+                {% endif %}
             </form>
 
             <div class="auth-divider">
@@ -123,21 +154,16 @@
             <div class="social-grid">
                 <button type="button" class="btn-social">
                     <svg viewBox="0 0 24 24">
-                        <path fill="#EA4335"
-                            d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 8.9 5 12 5z" />
-                        <path fill="#4285F4"
-                            d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z" />
-                        <path fill="#FBBC05"
-                            d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8 0-1.3.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z" />
-                        <path fill="#34A853"
-                            d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z" />
+                        <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 8.9 5 12 5z"/>
+                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.7-.2-2.3H12v4.6h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.9z"/>
+                        <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8 0-1.3.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"/>
+                        <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"/>
                     </svg>
                     Google
                 </button>
                 <button type="button" class="btn-social">
                     <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path fill-rule="evenodd" clip-rule="evenodd"
-                            d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
                     </svg>
                     GitHub
                 </button>

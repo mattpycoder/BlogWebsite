@@ -12,32 +12,34 @@
                 <p class="auth-subtitle">Sign in to access your blogs and personalized feed.</p>
             </div>
 
-            {% if form and form.errors %}
+            {% if form and form.errors and not form.email.errors and not form.password.errors %}
                 <div class="alert alert-danger" role="alert">
                     <div>
                         {% for field, errors in form.errors.items() %}
                             <div>{{ ', '.join(errors) }}</div>
                         {% endfor %}
                     </div>
-                    <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+                    <button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close alert">×</button>
                 </div>
             {% endif %}
 
             <form class="auth-form" method="POST" action="/login" novalidate>
                 {% if form %}
                     {{ form.csrf_token() }}
+                {% else %}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 {% endif %}
 
-                <!-- Email -->
+                <!-- Username or Email -->
                 <div class="form-group">
-                    <label class="form-label" for="email">Username / Email</label>
+                    <label class="form-label" for="email">Username or Email</label>
                     {% if form and form.email %}
-                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="Enter username or email", autocomplete="email") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="Enter username or email", autocomplete="username email") }}
                         {% if form.email.errors %}
                             <div class="form-error">{{ form.email.errors[0] }}</div>
                         {% endif %}
                     {% else %}
-                        <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                        <input type="text" class="form-control" id="email" name="email" placeholder="Enter username or email" required autocomplete="username email">
                     {% endif %}
                 </div>
 
@@ -64,9 +66,9 @@
 
                 <!-- Remember Me & Forgot Password -->
                 <div class="form-row-split">
-                    <label class="checkbox-label">
+                    <label class="checkbox-label" for="remember">
                         {% if form and form.remember %}
-                            {{ form.remember() }}
+                            {{ form.remember(id="remember") }}
                             <span>{{ form.remember.label.text }}</span>
                         {% else %}
                             <input type="checkbox" id="remember" name="remember">
@@ -78,9 +80,9 @@
 
                 <!-- Submit Button -->
                 {% if form and form.submit %}
-                    {{ form.submit(class="btn btn-primary btn-block", value="Sign In") }}
+                    {{ form.submit(class="btn btn-primary btn-block btn-lg", value="Sign In") }}
                 {% else %}
-                    <button type="submit" class="btn btn-primary btn-block">
+                    <button type="submit" class="btn btn-primary btn-block btn-lg">
                         Sign In
                     </button>
                 {% endif %}
