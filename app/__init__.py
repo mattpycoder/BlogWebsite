@@ -1,6 +1,6 @@
 import logging
 
-from flask import Flask, request
+from flask import Flask, flash, redirect, request, url_for
 from flask_login import LoginManager
 
 from app.config import Config
@@ -39,8 +39,6 @@ def create_app() -> Flask:
         logger.warning(
             f"LoginManager: Unauthorized access attempt to '{request.path}' from IP '{request.remote_addr}'"
         )
-        from flask import flash, redirect, url_for
-
         flash("Please log in to access this page.", "info")
         return redirect(url_for("auth.login"))
 
