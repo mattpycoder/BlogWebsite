@@ -38,7 +38,8 @@ class SupabaseClient:
         )
         logger.info(f"Supabase: Uploaded profile_picture: {path}")
 
-    def get_profile_picture_url(self) -> str:
+    @staticmethod
+    def get_profile_picture_url() -> str:
         logger.info("Constructing Profile Picture URL")
         profile_picture_url = (
             f"https://{Config.SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/"
