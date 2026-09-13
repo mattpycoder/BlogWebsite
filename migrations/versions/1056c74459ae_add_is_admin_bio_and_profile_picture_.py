@@ -1,8 +1,8 @@
-"""add user profile bio, is_admin and photo url fields
+"""Add is_admin, bio and profile picture fields
 
-Revision ID: 00e19f0bc9ec
+Revision ID: 1056c74459ae
 Revises: 58d15608267a
-Create Date: 2026-09-13 15:45:04.818050
+Create Date: 2026-09-13 19:14:34.230964
 
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = "00e19f0bc9ec"
+revision = "1056c74459ae"
 down_revision = "58d15608267a"
 branch_labels = None
 depends_on = None
@@ -24,6 +24,7 @@ def upgrade():
         )
         batch_op.add_column(sa.Column("bio", sa.String(), nullable=True))
         batch_op.add_column(sa.Column("profile_picture", sa.String(), nullable=True))
+
     # ### end Alembic commands ###
 
 
