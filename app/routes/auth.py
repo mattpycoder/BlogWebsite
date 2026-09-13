@@ -6,7 +6,7 @@ from werkzeug.wrappers import Response
 
 from app.database.models import User
 from app.forms.auth import UserLoginForm, UserRegistrationForm
-from app.utils import hash_password
+from app.utils import check_password, hash_password
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,12 @@ def login() -> str | Response:
     if request.method == "POST":
         logger.info(f"Auth Route: Processing login submission for '{login_form.email.data}'")
         if login_form.validate_on_submit():
+            email_or_username = login_form.email.data.strip().lower()
             user = User.get_user_from_db_by_email(
-                email=login_form.email.data
-            ) or User.get_user_from_db_by_username(username=login_form.email.data)
-            if user and user.username:
+                email=email_or_username,
+            ) or User.get_user_from_db_by_username(username=email_or_username)
+
+            if user and check_password(user.password, login_form.password.data):
                 login_user(
                     user,
                     remember=login_form.remember.data if hasattr(login_form, "remember") else False,
@@ -73,8 +75,8 @@ def register() -> str | Response:
             user = User(
                 first_name=registration_form.first_name.data,
                 last_name=registration_form.last_name.data,
-                username=registration_form.username.data,
-                email=registration_form.email.data,
+                username=registration_form.username.data.strip(),
+                email=registration_form.email.data.strip(),
                 password=password_hashed,
             )
             User.push_user_into_db(user=user)

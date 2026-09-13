@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Access Forbidden — BlogHub{% endblock %}
+
+{% block content %}
+<main class="error-page-section">
+    <div class="error-card">
+        <div class="error-code text-gradient">403</div>
+        <h1 class="error-title">Access Forbidden</h1>
+        <p class="error-desc">
+            You do not have permission or sufficient rights to access this page or resource.
+        </p>
+        <a href="/" class="btn btn-primary btn-lg">
+            Return to Homepage
+        </a>
+    </div>
+</main>
+{% endblock %}

@@ -27,6 +27,9 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
         nullable=False,
         default=lambda: datetime.now(UTC),
     )
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    bio: Mapped[str] = mapped_column(nullable=True)
+    profile_picture: Mapped[str] = mapped_column(nullable=True)
 
     @staticmethod
     def push_user_into_db(user: User) -> None:
@@ -80,5 +83,91 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
             db.session.rollback()
             logger.exception(
                 f"Database Error: Failed to update password for user '{self.username}'",
+            )
+            raise
+
+    def delete_user(self) -> None:
+        logger.info(f"Database: Deleting operation for user '{self.username}' (ID={self.id})")
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            logger.info("Database: The user is successfully deleted")
+        except:
+            db.session.rollback()
+            logger.exception(
+                f"Database Error: Failed to delete the user '{self.username}'",
+            )
+            raise
+
+    def update_profile_picture(self, profile_picture_path: str) -> None:
+        logger.info(f"Database: Updating profile picture for user '{self.username}'")
+        try:
+            self.profile_picture = profile_picture_path
+            db.session.commit()
+            logger.info(
+                f"Database: Profile picture path update committed successfully for user '{self.username}'"
+            )
+        except Exception:
+            db.session.rollback()
+            logger.exception(
+                f"Database Error: Failed to update profile picture path for user '{self.username}'",
+            )
+            raise
+
+    def delete_profile_picture(self) -> None:
+        logger.info(f"Database: Deleting profile picture for user '{self.username}'")
+        try:
+            self.profile_picture = ""
+            db.session.commit()
+            logger.info(
+                f"Database: Profile picture path deletion committed successfully for user '{self.username}'"
+            )
+        except Exception:
+            db.session.rollback()
+            logger.exception(
+                f"Database Error: Failed to delete profile picture path for user '{self.username}'",
+            )
+            raise
+
+    def update_first_name(self, first_name: str) -> None:
+        logger.info(f"Database: Updating first name  for user '{self.username}'")
+        try:
+            self.first_name = first_name
+            db.session.commit()
+            logger.info(
+                f"Database: First name update committed successfully for user '{self.username}'"
+            )
+        except Exception:
+            db.session.rollback()
+            logger.exception(
+                f"Database Error: Failed to update first name for user '{self.username}'",
+            )
+            raise
+
+    def update_last_name(self, last_name: str) -> None:
+        logger.info(f"Database: Updating last name  for user '{self.username}'")
+        try:
+            self.last_name = last_name
+            db.session.commit()
+            logger.info(
+                f"Database: Last name update committed successfully for user '{self.username}'"
+            )
+        except Exception:
+            db.session.rollback()
+            logger.exception(
+                f"Database Error: Failed to update last name for user '{self.username}'",
+            )
+            raise
+
+    def update_bio(self, bio: str) -> None:
+        logger.info(f"Database: Updating bio for user '{self.username}'")
+        try:
+            self.bio = bio
+            db.session.commit()
+            logger.info(f"Database: Bio update committed successfully for user '{self.username}'")
+        except Exception:
+            db.session.rollback()
+            logger.exception(
+                f"Database Error: Failed to update bio for user '{self.username}'",
             )
             raise

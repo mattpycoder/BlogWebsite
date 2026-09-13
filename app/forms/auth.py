@@ -2,6 +2,7 @@ import logging
 
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField, FileSize
 from wtforms.fields.simple import BooleanField, PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, ValidationError
 
@@ -32,17 +33,18 @@ class UserLoginForm(FlaskForm):
 
     def validate_email(self, username: StringField) -> None:
         logger.debug(f"Form Validation: Checking user identifier '{username.data}' for login")
-        user = User.get_user_from_db_by_email(
-            email=username.data
-        ) or User.get_user_from_db_by_username(username=username.data)
+        username = username.data.strip().lower()
+        user = User.get_user_from_db_by_email(email=username) or User.get_user_from_db_by_username(
+            username=username
+        )
         if not user:
             logger.warning(
-                f"Form Validation Failed: User with identifier '{username.data}' not found in database"
+                f"Form Validation Failed: User with identifier '{username}' not found in database"
             )
             raise ValidationError("Invalid username or email.")
 
     def validate_password(self, password: PasswordField) -> None:
-        login = self.email.data
+        login = self.email.data.strip().lower()
         logger.debug(f"Form Validation: Verifying password for '{login}'")
         user = User.get_user_from_db_by_email(email=login) or User.get_user_from_db_by_username(
             username=login
@@ -64,7 +66,7 @@ class UserRegistrationForm(FlaskForm):
                 r"^[A-Za-z0-9](?:[A-Za-z0-9_]*[A-Za-z0-9])?$",
                 message=(
                     "Username must contain only letters, numbers, "
-                    "and underscores, and cannot start or end with an underscore."
+                    "and underscores, and cannot contain spaces and start or end with an underscore."
                 ),
             ),
         ],
@@ -77,19 +79,21 @@ class UserRegistrationForm(FlaskForm):
     submit = SubmitField(label=("Submit"))
 
     def validate_username(self, username: StringField) -> None:
-        if username.data.lower() in RESERVED_USERNAMES:
-            logger.warning(f"Form Validation Failed: Reserved username requested '{username.data}'")
+        username = username.data.strip().lower()
+        if username in RESERVED_USERNAMES:
+            logger.warning(f"Form Validation Failed: Reserved username requested '{username}'")
             raise ValidationError("This username is not available.")
-        if username.data and User.is_field_in_db(username=username.data):
+        if username and User.is_field_in_db(username=username):
             logger.warning(
-                f"Form Validation Failed: Duplicate username registration attempt '{username.data}'"
+                f"Form Validation Failed: Duplicate username registration attempt '{username}'"
             )
             raise ValidationError("Username is already registered.")
 
     def validate_email(self, email: StringField) -> None:
-        if email.data and User.is_field_in_db(email=email.data):
+        email = email.data.strip().lower()
+        if email and User.is_field_in_db(email=email):
             logger.warning(
-                f"Form Validation Failed: Duplicate email registration attempt '{email.data}'"
+                f"Form Validation Failed: Duplicate email registration attempt '{email}'"
             )
             raise ValidationError("Email is already registered.")
 
@@ -122,3 +126,21 @@ class UserChangePasswordForm(FlaskForm):
                 f"Form Validation Failed: User '{current_user.username}' entered existing password as new password"
             )
             raise ValidationError("New password must be different from your current password.")
+
+
+class UserUpdateProfilePictureForm(FlaskForm):
+    profile_picture = FileField(
+        "Profile Picture",
+        validators=[
+            FileAllowed(["jpg", "jpeg", "png"], "Images only."),
+            FileSize(max_size=5 * 1024 * 1024, message="Maximum file size is 5 MB."),
+        ],
+    )
+    submit = SubmitField(label=("Submit"))
+
+
+class UserProfileInfoForm(FlaskForm):
+    first_name = StringField("First Name", validators=[Length(max=100)])
+    last_name = StringField("Last Name", validators=[Length(max=100)])
+    bio = StringField("Bio", validators=[Length(max=100)])
+    submit = SubmitField(label=("Submit"))

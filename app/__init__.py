@@ -7,7 +7,7 @@ from app.config import Config
 from app.database.models import User
 from app.extensions import bcrypt, csrf, db, migrate
 from app.routes.auth import auth
-from app.routes.general import general_bp, page_not_found
+from app.routes.general import forbidden, general_bp, internal_server_error, page_not_found
 from app.routes.profile import profile_bp
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,10 @@ def create_app() -> Flask:
     app.register_blueprint(auth)
     app.register_blueprint(general_bp)
     app.register_blueprint(profile_bp)
+
+    app.register_error_handler(403, forbidden)
     app.register_error_handler(404, page_not_found)
-    logger.info("Application: Registered Blueprints (auth, general, profile)")
+    app.register_error_handler(500, internal_server_error)
+    logger.info("Application: Registered Blueprints and error handlers (403, 404, 500)")
 
     return app

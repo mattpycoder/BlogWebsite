@@ -12,13 +12,9 @@
                 <p class="auth-subtitle">Sign in to access your blogs and personalized feed.</p>
             </div>
 
-            {% if form and form.errors and not form.email.errors and not form.password.errors %}
+            {% if form and form.errors %}
                 <div class="alert alert-danger" role="alert">
-                    <div>
-                        {% for field, errors in form.errors.items() %}
-                            <div>{{ ', '.join(errors) }}</div>
-                        {% endfor %}
-                    </div>
+                    <span>Invalid username/email or password.</span>
                     <button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close alert">×</button>
                 </div>
             {% endif %}
@@ -34,10 +30,7 @@
                 <div class="form-group">
                     <label class="form-label" for="email">Username or Email</label>
                     {% if form and form.email %}
-                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), id="email", placeholder="Enter username or email", autocomplete="username email") }}
-                        {% if form.email.errors %}
-                            <div class="form-error">{{ form.email.errors[0] }}</div>
-                        {% endif %}
+                        {{ form.email(class="form-control", id="email", placeholder="Enter username or email", autocomplete="username email") }}
                     {% else %}
                         <input type="text" class="form-control" id="email" name="email" placeholder="Enter username or email" required autocomplete="username email">
                     {% endif %}
@@ -48,7 +41,7 @@
                     <label class="form-label" for="password">Password</label>
                     <div class="input-with-icon">
                         {% if form and form.password %}
-                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), id="password", placeholder="Enter your password", autocomplete="current-password") }}
+                            {{ form.password(class="form-control", id="password", placeholder="Enter your password", autocomplete="current-password") }}
                         {% else %}
                             <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
                         {% endif %}
@@ -59,9 +52,6 @@
                             </svg>
                         </button>
                     </div>
-                    {% if form and form.password and form.password.errors %}
-                        <div class="form-error">{{ form.password.errors[0] }}</div>
-                    {% endif %}
                 </div>
 
                 <!-- Remember Me & Forgot Password -->

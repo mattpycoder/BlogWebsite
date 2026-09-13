@@ -915,7 +915,6 @@ main.main-content {
     margin-top: 2rem;
     margin-bottom: 2rem;
     position: relative;
-    overflow: hidden;
 }
 
 .profile-header-banner {
@@ -925,6 +924,8 @@ main.main-content {
     right: 0;
     height: 6px;
     background: linear-gradient(90deg, var(--primary) 0%, #60a5fa 50%, #818cf8 100%);
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
 }
 
 .profile-hero-content {
@@ -966,8 +967,8 @@ main.main-content {
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     background-color: var(--primary);
     border: 2px solid #ffffff;
     border-radius: var(--radius-full);
@@ -976,13 +977,88 @@ main.main-content {
     justify-content: center;
     color: #ffffff;
     cursor: pointer;
-    transition: transform var(--transition-fast), background-color var(--transition-fast);
+    transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
     box-shadow: var(--shadow-sm);
+    z-index: 5;
 }
 
 .avatar-edit-overlay:hover {
     background-color: var(--primary-hover);
     transform: scale(1.1);
+    box-shadow: var(--shadow-md);
+}
+
+.avatar-actions-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    min-width: 200px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color, #e2e8f0);
+    padding: 0.5rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.35rem;
+    z-index: 100;
+    box-sizing: border-box;
+}
+
+.avatar-actions-dropdown.show {
+    display: flex;
+    animation: dropdownFade 0.2s ease-out forwards;
+}
+
+@keyframes dropdownFade {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -8px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.avatar-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+    color: var(--text-main, #1e293b);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm, 6px);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    box-sizing: border-box;
+}
+
+.avatar-dropdown-item svg {
+    flex-shrink: 0;
+}
+
+.avatar-dropdown-item:hover {
+    background: var(--bg-hover, #f1f5f9);
+    color: var(--primary);
+}
+
+.avatar-dropdown-item.text-danger {
+    color: var(--danger, #ef4444);
+}
+
+.avatar-dropdown-item.text-danger:hover {
+    background: var(--danger-bg, #fef2f2);
+    color: #dc2626;
 }
 
 .profile-info {
