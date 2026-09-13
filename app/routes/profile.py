@@ -80,7 +80,7 @@ def change_password() -> Response | str:
 @profile_bp.route("/delete_account", methods=["POST"])
 @login_required
 def delete_account() -> str:
-    path = f"avatars/{current_user.id}"
+    path = current_user.profile_picture
     current_user.delete_user()
     supabase_client.delete_profile_picture(path=path)
     flash("Your account has been deleted successfully.", "success")
