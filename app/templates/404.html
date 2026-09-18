@@ -1,80 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Not Found</title>
+{% extends "base.html" %}
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+{% block title %}Page Not Found — BlogHub{% endblock %}
 
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: Arial, sans-serif;
-            background: #f8f9fa;
-            color: #212529;
-        }
-
-        .error-container {
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .error-code {
-            font-size: 120px;
-            font-weight: 700;
-            line-height: 1;
-            color: #dee2e6;
-            margin-bottom: 20px;
-        }
-
-        .error-title {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-
-        .error-message {
-            font-size: 17px;
-            color: #6c757d;
-            margin-bottom: 30px;
-        }
-
-        .home-button {
-            display: inline-block;
-            padding: 12px 24px;
-            background: #212529;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: background 0.2s ease;
-        }
-
-        .home-button:hover {
-            background: #343a40;
-        }
-    </style>
-</head>
-
-<body>
-    <main class="error-container">
-        <div class="error-code">404</div>
-
-        <h1 class="error-title">User Not Found</h1>
-
-        <p class="error-message">
-            Sorry, the user you're looking for does not exist.
+{% block content %}
+<main class="error-page-section">
+    <div class="error-card">
+        <div class="error-code text-gradient">404</div>
+        <h1 class="error-title">User or Page Not Found</h1>
+        <p class="error-desc">
+            Sorry, the page or user profile you are looking for does not exist or may have been moved.
         </p>
-
-        <a href="{{ url_for('general.index') }}" class="home-button">
-            Go Home
+        <a href="/" class="btn btn-primary btn-lg">
+            Return to Homepage
         </a>
-    </main>
-</body>
-</html>
+    </div>
+</main>
+{% endblock %}
