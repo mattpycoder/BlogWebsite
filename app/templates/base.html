@@ -35,12 +35,28 @@
 
             <div class="nav-actions">
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('profile.profile', username=current_user.username) }}" class="user-profile-pill">
-                        <span class="user-pill-avatar">
-                            {{ current_user.username[0]|upper if current_user.username else 'U' }}
-                        </span>
-                        <span>{{ current_user.username }}</span>
-                    </a>
+                    <div class="user-profile-pill">
+                        <a href="{{ url_for('profile.profile', username=current_user.username) }}" class="user-pill-info" title="View Profile">
+                            <span class="user-pill-avatar">
+                            {% if current_user.profile_picture %}
+                            <img
+                                    src="{{ current_user.profile_picture_url }}"
+                                    alt="{{ current_user.username }}'s profile picture"
+                            >
+                            {% elif profile_user and profile_user.username %}
+                            {{ profile_user.username[0]|upper }}
+                            {% else %}
+                            U
+                            {% endif %}
+                            </span>
+                            <span class="user-pill-username">{{ current_user.username }}</span>
+                        </a>
+                        {% if current_user.is_admin %}
+                        <a href="/admin" class="user-role-badge badge-admin badge-admin-link" title="Open Admin Dashboard">Admin</a>
+                        {% else %}
+                        <span class="user-role-badge badge-user">User</span>
+                        {% endif %}
+                    </div>
                     <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" name="logout" class="btn btn-text">

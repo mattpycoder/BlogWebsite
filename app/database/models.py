@@ -4,11 +4,12 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
+from flask import flash
 from flask_login import UserMixin
 from sqlalchemy.orm import Mapped
 from sqlalchemy.testing.schema import mapped_column
 
-from app.extensions import db
+from app.extensions import db, supabase_client
 from app.utils import hash_password
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,10 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
     is_admin: Mapped[bool] = mapped_column(default=False)
     bio: Mapped[str] = mapped_column(nullable=True)
     profile_picture: Mapped[str] = mapped_column(nullable=True)
+
+    @property
+    def profile_picture_url(self) -> str:
+        return supabase_client.get_profile_picture_url()
 
     @staticmethod
     def push_user_into_db(user: User) -> None:
@@ -129,45 +134,13 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
             )
             raise
 
-    def update_first_name(self, first_name: str) -> None:
-        logger.info(f"Database: Updating first name  for user '{self.username}'")
-        try:
-            self.first_name = first_name
+    def update_profile_info(self) -> None:
+        logger.info(f"Database: Updating profile info for user '{self.username}'")
+        if db.session.is_modified(self):
             db.session.commit()
-            logger.info(
-                f"Database: First name update committed successfully for user '{self.username}'"
-            )
-        except Exception:
+            flash("Profile updated successfully!", "success")
+            logger.info("Profile info updated successfully!")
+        else:
             db.session.rollback()
-            logger.exception(
-                f"Database Error: Failed to update first name for user '{self.username}'",
-            )
-            raise
-
-    def update_last_name(self, last_name: str) -> None:
-        logger.info(f"Database: Updating last name  for user '{self.username}'")
-        try:
-            self.last_name = last_name
-            db.session.commit()
-            logger.info(
-                f"Database: Last name update committed successfully for user '{self.username}'"
-            )
-        except Exception:
-            db.session.rollback()
-            logger.exception(
-                f"Database Error: Failed to update last name for user '{self.username}'",
-            )
-            raise
-
-    def update_bio(self, bio: str) -> None:
-        logger.info(f"Database: Updating bio for user '{self.username}'")
-        try:
-            self.bio = bio
-            db.session.commit()
-            logger.info(f"Database: Bio update committed successfully for user '{self.username}'")
-        except Exception:
-            db.session.rollback()
-            logger.exception(
-                f"Database Error: Failed to update bio for user '{self.username}'",
-            )
-            raise
+            flash("No changes detected.", "info")
+            logger.info("No changes detected.")

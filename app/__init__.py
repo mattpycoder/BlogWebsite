@@ -1,11 +1,12 @@
 import logging
 
 from flask import Flask, flash, redirect, request, url_for
+from flask_admin.contrib.sqla import ModelView
 from flask_login import LoginManager
 
 from app.config import Config
 from app.database.models import User
-from app.extensions import bcrypt, csrf, db, migrate
+from app.extensions import admin, bcrypt, csrf, db, migrate
 from app.routes.auth import auth
 from app.routes.general import forbidden, general_bp, internal_server_error, page_not_found
 from app.routes.profile import profile_bp
@@ -46,7 +47,9 @@ def create_app() -> Flask:
     migrate.init_app(app, db)
     bcrypt.init_app(app)
     csrf.init_app(app)
-    logger.info("Application: Database, Migrate, Bcrypt, and CSRF extensions initialized")
+    admin.init_app(app)
+    admin.add_view(ModelView(User, db.session))
+    logger.info("Application: Database, Migrate, Bcrypt, CSRF and Admin extensions initialized")
 
     app.register_blueprint(auth)
     app.register_blueprint(general_bp)

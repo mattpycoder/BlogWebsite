@@ -200,13 +200,10 @@ main.main-content {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.35rem 0.85rem 0.35rem 0.45rem;
+    padding: 0.3rem 0.65rem 0.3rem 0.4rem;
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-main);
     transition: all var(--transition-fast);
 }
 
@@ -214,6 +211,21 @@ main.main-content {
     background: var(--bg-card);
     border-color: var(--primary-border);
     box-shadow: var(--shadow-sm);
+}
+
+.user-pill-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-main);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.user-pill-info:hover .user-pill-username {
+    color: var(--primary);
 }
 
 .user-pill-avatar {
@@ -227,6 +239,43 @@ main.main-content {
     justify-content: center;
     font-size: 0.75rem;
     font-weight: 700;
+}
+
+.user-role-badge {
+    font-size: 0.685rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 0.18rem 0.5rem;
+    border-radius: var(--radius-full);
+    line-height: 1.2;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+
+.badge-admin {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    box-shadow: 0 2px 5px rgba(217, 119, 6, 0.25);
+}
+
+.badge-admin-link {
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+}
+
+.badge-admin-link:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 3px 8px rgba(217, 119, 6, 0.35);
+    filter: brightness(1.08);
+    color: #ffffff;
+}
+
+.badge-user {
+    background: var(--bg-surface-secondary, #e2e8f0);
+    color: var(--text-secondary, #475569);
+    border: 1px solid var(--border-color, #cbd5e1);
 }
 
 /* ==========================================================================
@@ -251,6 +300,15 @@ main.main-content {
 
 .btn:active {
     transform: scale(0.98);
+}
+
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none !important;
+    transform: none !important;
 }
 
 .btn-sm {

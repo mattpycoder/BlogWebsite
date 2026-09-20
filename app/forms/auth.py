@@ -31,28 +31,6 @@ class UserLoginForm(FlaskForm):
     remember = BooleanField("Remember me")
     submit = SubmitField(label=("Sign In"))
 
-    def validate_email(self, username: StringField) -> None:
-        logger.debug(f"Form Validation: Checking user identifier '{username.data}' for login")
-        username = username.data.strip().lower()
-        user = User.get_user_from_db_by_email(email=username) or User.get_user_from_db_by_username(
-            username=username
-        )
-        if not user:
-            logger.warning(
-                f"Form Validation Failed: User with identifier '{username}' not found in database"
-            )
-            raise ValidationError("Invalid username or email.")
-
-    def validate_password(self, password: PasswordField) -> None:
-        login = self.email.data.strip().lower()
-        logger.debug(f"Form Validation: Verifying password for '{login}'")
-        user = User.get_user_from_db_by_email(email=login) or User.get_user_from_db_by_username(
-            username=login
-        )
-        if not user or not check_password(user.password, password.data):
-            logger.warning(f"Form Validation Failed: Incorrect password attempt for '{login}'")
-            raise ValidationError("Invalid password.")
-
 
 class UserRegistrationForm(FlaskForm):
     first_name = StringField("First Name", validators=[Length(max=100)])
@@ -140,7 +118,7 @@ class UserUpdateProfilePictureForm(FlaskForm):
 
 
 class UserProfileInfoForm(FlaskForm):
-    first_name = StringField("First Name", validators=[Length(max=100)])
-    last_name = StringField("Last Name", validators=[Length(max=100)])
+    first_name = StringField("First Name", validators=[DataRequired(), Length(max=100)])
+    last_name = StringField("Last Name", validators=[DataRequired(), Length(max=100)])
     bio = StringField("Bio", validators=[Length(max=100)])
     submit = SubmitField(label=("Submit"))

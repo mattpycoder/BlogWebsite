@@ -7,7 +7,7 @@ from supabase import create_client
 from supabase.client import ClientOptions
 from werkzeug.datastructures import FileStorage
 
-from app import Config
+from app.config import Config
 
 logger = logging.getLogger(__name__)
 

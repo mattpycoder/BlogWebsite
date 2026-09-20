@@ -653,7 +653,7 @@ PROFILE USER & PERMISSIONS
                                   placeholder="Tell the community a little about yourself...">{{ current_user.bio if current_user.bio else '' }}</textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; align-self: flex-start;">
+                    <button type="submit" id="save-profile-btn" class="btn btn-primary" style="margin-top: 0.5rem; align-self: flex-start;" disabled>
                         Save Changes
                     </button>
                 </form>
@@ -1103,5 +1103,46 @@ PROFILE USER & PERMISSIONS
         if (previewBox) previewBox.textContent = initial;
         if (heroAvatar) heroAvatar.textContent = initial;
     }
+
+    /* Personal Details Form Validation & Dynamic Button State */
+    document.addEventListener('DOMContentLoaded', function () {
+        const firstNameInput = document.getElementById('first_name');
+        const lastNameInput = document.getElementById('last_name');
+        const bioInput = document.getElementById('bio');
+        const saveBtn = document.getElementById('save-profile-btn');
+
+        if (!firstNameInput || !lastNameInput || !bioInput || !saveBtn) return;
+
+        // Store initial values loaded from backend
+        const initialFirstName = firstNameInput.value.trim();
+        const initialLastName = lastNameInput.value.trim();
+        const initialBio = bioInput.value.trim();
+
+        function validateProfileDetailsForm() {
+            const currentFirstName = firstNameInput.value.trim();
+            const currentLastName = lastNameInput.value.trim();
+            const currentBio = bioInput.value.trim();
+
+            // First name and last name cannot be empty
+            const hasValidNames = currentFirstName.length > 0 && currentLastName.length > 0;
+
+            // At least one field must differ from the initial saved data
+            const hasChanges = (
+                currentFirstName !== initialFirstName ||
+                currentLastName !== initialLastName ||
+                currentBio !== initialBio
+            );
+
+            // Enable only if valid names exist AND at least one field is modified
+            saveBtn.disabled = !(hasValidNames && hasChanges);
+        }
+
+        firstNameInput.addEventListener('input', validateProfileDetailsForm);
+        lastNameInput.addEventListener('input', validateProfileDetailsForm);
+        bioInput.addEventListener('input', validateProfileDetailsForm);
+
+        // Run validation on initial load
+        validateProfileDetailsForm();
+    });
 </script>
 {% endblock %}

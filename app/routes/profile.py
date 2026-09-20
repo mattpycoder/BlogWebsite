@@ -23,15 +23,14 @@ def profile(username: str) -> Response | tuple[str, int]:
         is_owner = current_user.username == username
         logger.debug(f"Profile Route: Profile found for '{username}', is_owner={is_owner}")
         profile_picture_url = current_user.profile_picture
-        if profile_picture_url:
-            profile_picture_url = supabase_client.get_profile_picture_url()
+        if current_user.profile_picture:
             logger.info(f"Profile Picture URL: {profile_picture_url}")
         response = make_response(
             render_template(
                 "profile.html",
                 profile_user=username,
                 is_owner=is_owner,
-                profile_picture_url=profile_picture_url,
+                profile_picture_url=current_user.profile_picture_url,
             )
         )
         response.cache_control.no_store = True
@@ -64,7 +63,6 @@ def change_password() -> Response | str:
             )
             flash("An error occurred while updating your password. Please try again.", "danger")
             return redirect(url_for("profile.profile", username=current_user.username))
-
     logger.warning(
         f"Password Change Route: Validation failed for user '{current_user.username}'. Errors: {change_password_form.errors}"
     )
@@ -123,16 +121,11 @@ def delete_profile_picture() -> Response:
 
 @profile_bp.route("/update_profile_info", methods=["POST"])
 @login_required
-def update_profile_info() -> Response:
+def update_profile_info() -> str:
     update_profile_info_form = UserProfileInfoForm()
     if update_profile_info_form.validate_on_submit():
-        if update_profile_info_form.first_name.data != current_user.first_name:
-            current_user.update_first_name(first_name=update_profile_info_form.first_name.data)
-            flash("Profile first name updated successfully.", "success")
-        if update_profile_info_form.last_name.data != current_user.last_name:
-            current_user.update_last_name(last_name=update_profile_info_form.last_name.data)
-            flash("Profile last name updated successfully.", "success")
-        if update_profile_info_form.bio.data != current_user.bio:
-            current_user.update_bio(bio=update_profile_info_form.bio.data)
-            flash("Profile bio updated successfully.", "success")
-    return redirect(url_for("profile.profile", username=current_user.username, is_owner=True))
+        update_profile_info_form.populate_obj(current_user)
+        current_user.update_profile_info()
+    return render_template(
+        "profile.html", username=current_user.username, is_owner=True, active_tab="settings-tab"
+    )
