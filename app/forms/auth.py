@@ -3,7 +3,12 @@ import logging
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField, FileSize
-from wtforms.fields.simple import BooleanField, PasswordField, StringField, SubmitField
+from wtforms.fields.simple import (
+    BooleanField,
+    PasswordField,
+    StringField,
+    SubmitField,
+)
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, ValidationError
 
 from app.database.models import User
@@ -90,16 +95,14 @@ class UserChangePasswordForm(FlaskForm):
         logger.debug(
             f"Form Validation: Verifying current password for user '{current_user.username}'"
         )
-        user = User.get_user_from_db_by_username(username=current_user.username)
-        if not user or not check_password(user.password, current_password.data):
+        if not check_password(current_user.password, current_password.data):
             logger.warning(
                 f"Form Validation Failed: Incorrect current password entered for user '{current_user.username}'"
             )
             raise ValidationError("Current password is incorrect.")
 
     def validate_new_password(self, new_password: PasswordField) -> None:
-        user = User.get_user_from_db_by_username(username=current_user.username)
-        if user and check_password(user.password, new_password.data):
+        if check_password(current_user.password, new_password.data):
             logger.warning(
                 f"Form Validation Failed: User '{current_user.username}' entered existing password as new password"
             )

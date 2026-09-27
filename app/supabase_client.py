@@ -1,9 +1,8 @@
 import logging
 
-from flask_login import current_user
 from storage3.exceptions import StorageException
 from storage3.types import FileOptions
-from supabase import create_client
+from supabase import Client, create_client
 from supabase.client import ClientOptions
 from werkzeug.datastructures import FileStorage
 
@@ -14,15 +13,21 @@ logger = logging.getLogger(__name__)
 
 class SupabaseClient:
     def __init__(self, bucket_name: str = Config.SUPABASE_BUCKET_NAME):
-        self.client = create_client(
-            supabase_url=f"https://{Config.SUPABASE_PROJECT_ID}.supabase.co",
-            supabase_key=Config.SUPABASE_API_KEY,
-            options=ClientOptions(
-                storage_client_timeout=10,
-                schema="public",
-            ),
-        )
+        self._client: Client | None = None
         self.bucket_name = bucket_name
+
+    @property
+    def client(self) -> Client:
+        if self._client is None:
+            self._client = create_client(
+                supabase_url=f"https://{Config.SUPABASE_PROJECT_ID}.supabase.co",
+                supabase_key=Config.SUPABASE_API_KEY,
+                options=ClientOptions(
+                    storage_client_timeout=10,
+                    schema="public",
+                ),
+            )
+        return self._client
 
     def upload_profile_picture(self, path: str, profile_picture: FileStorage) -> None:
         logger.info(f"Supabase: Uploading profile_picture: {path}")
@@ -39,11 +44,11 @@ class SupabaseClient:
         logger.info(f"Supabase: Uploaded profile_picture: {path}")
 
     @staticmethod
-    def get_profile_picture_url() -> str:
+    def get_profile_picture_url(user_id: int) -> str:
         logger.info("Constructing Profile Picture URL")
         profile_picture_url = (
             f"https://{Config.SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/"
-            f"{Config.SUPABASE_BUCKET_NAME}/avatars/{current_user.id}/profile.jpg"
+            f"{Config.SUPABASE_BUCKET_NAME}/avatars/{user_id}/profile.jpg"
         )
         return profile_picture_url
 

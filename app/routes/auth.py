@@ -1,6 +1,6 @@
 import logging
 
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.wrappers import Response
 
@@ -23,6 +23,7 @@ def login() -> str | Response:
 
     login_form = UserLoginForm()
     if request.method == "POST":
+        next_page = request.args.get("next")
         logger.info(f"Auth Route: Processing login submission for '{login_form.email.data}'")
         if login_form.validate_on_submit():
             email_or_username = login_form.email.data.strip().lower()
@@ -38,12 +39,17 @@ def login() -> str | Response:
                 logger.info(
                     f"Auth Route: User '{user.username}' (ID={user.id}) successfully logged in"
                 )
-                return redirect(url_for("profile.profile", username=user.username))
-        else:
-            logger.warning(
-                f"Auth Route: Login validation failed for '{login_form.email.data}'. Errors: {login_form.errors}"
-            )
 
+                if next_page and next_page.startswith("/") and not next_page.startswith("//"):
+                    return redirect(next_page)
+                logger.info(f"Next page: '{next_page}'")
+
+                return redirect(url_for("profile.profile", username=user.username))
+            else:
+                flash("Invalid username or password.", category="danger")
+                logger.warning(
+                    f"Auth Route: Login validation failed for '{login_form.email.data}'. Errors: {login_form.errors}"
+                )
     return render_template("login.html", form=login_form)
 
 
@@ -75,11 +81,11 @@ def register() -> str | Response:
             user = User(
                 first_name=registration_form.first_name.data,
                 last_name=registration_form.last_name.data,
-                username=registration_form.username.data.strip(),
-                email=registration_form.email.data.strip(),
+                username=registration_form.username.data.strip().lower(),
+                email=registration_form.email.data.strip().lower(),
                 password=password_hashed,
             )
-            User.push_user_into_db(user=user)
+            User.add_user_to_db(user=user)
             logger.info(
                 f"Auth Route: User '{user.username}' successfully registered and saved to database"
             )

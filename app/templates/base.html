@@ -43,8 +43,8 @@
                                     src="{{ current_user.profile_picture_url }}"
                                     alt="{{ current_user.username }}'s profile picture"
                             >
-                            {% elif profile_user and profile_user.username %}
-                            {{ profile_user.username[0]|upper }}
+                            {% elif current_user and current_user.username %}
+                            {{ current_user.username[0]|upper }}
                             {% else %}
                             U
                             {% endif %}
