@@ -40,7 +40,7 @@ def login() -> str | Response:
                     f"Auth Route: User '{user.username}' (ID={user.id}) successfully logged in"
                 )
 
-                if next_page and next_page.startswith("/") and not next_page.startswith("//"):
+                if next_page:
                     return redirect(next_page)
                 logger.info(f"Next page: '{next_page}'")
 
