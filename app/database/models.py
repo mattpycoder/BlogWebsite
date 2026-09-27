@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 from typing import Any
 
 from flask_login import UserMixin
-from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import Mapped, relationship
 from sqlalchemy.testing.schema import mapped_column
 
-from app.extensions import db
+from app.extensions import db, supabase_client
 from app.utils import hash_password
 
 logger = logging.getLogger(__name__)
@@ -19,8 +19,8 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
-    first_name: Mapped[str] = mapped_column(nullable=True)
-    last_name: Mapped[str] = mapped_column(nullable=True)
+    first_name: Mapped[str] = mapped_column(nullable=False)
+    last_name: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -30,9 +30,15 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
     is_admin: Mapped[bool] = mapped_column(default=False)
     bio: Mapped[str] = mapped_column(nullable=True)
     profile_picture: Mapped[str] = mapped_column(nullable=True)
+    blogs: Mapped[list[Blog]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    posts: Mapped[list[Post]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def profile_picture_url(self) -> str:
+        return supabase_client.get_profile_picture_url(user_id=self.id)
 
     @staticmethod
-    def push_user_into_db(user: User) -> None:
+    def add_user_to_db(user: User) -> None:
         logger.info(
             f"Database: Saving new user to DB with username='{user.username}', email='{user.email}'"
         )
@@ -92,7 +98,7 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
             db.session.delete(self)
             db.session.commit()
             logger.info("Database: The user is successfully deleted")
-        except:
+        except Exception:
             db.session.rollback()
             logger.exception(
                 f"Database Error: Failed to delete the user '{self.username}'",
@@ -129,45 +135,144 @@ class User(db.Model, UserMixin):  # ty: ignore[unsupported-base]
             )
             raise
 
-    def update_first_name(self, first_name: str) -> None:
-        logger.info(f"Database: Updating first name  for user '{self.username}'")
+    def update_profile_info(self) -> None:
+        logger.info(f"Database: Updating profile info for user '{self.username}'")
+
+        if not db.session.is_modified(self):
+            return
+
         try:
-            self.first_name = first_name
             db.session.commit()
-            logger.info(
-                f"Database: First name update committed successfully for user '{self.username}'"
-            )
+            logger.info("Profile info updated successfully!")
         except Exception:
             db.session.rollback()
             logger.exception(
-                f"Database Error: Failed to update first name for user '{self.username}'",
+                f"Database Error: Failed to update profile info for user '{self.username}'"
             )
             raise
 
-    def update_last_name(self, last_name: str) -> None:
-        logger.info(f"Database: Updating last name  for user '{self.username}'")
+
+class Blog(db.Model):  # ty: ignore[unsupported-base]
+    __tablename__ = "blogs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("users.id"),
+        nullable=False,
+    )
+
+    title: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+
+    category: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+
+    description: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    user: Mapped[User] = relationship(
+        back_populates="blogs",
+    )
+
+    posts: Mapped[list[Post]] = relationship(
+        back_populates="blog",
+        cascade="all, delete-orphan",
+    )
+
+    def add_blog_to_db(self) -> None:
+        logger.info("Database: Adding blog to database")
         try:
-            self.last_name = last_name
+            db.session.add(self)
             db.session.commit()
-            logger.info(
-                f"Database: Last name update committed successfully for user '{self.username}'"
-            )
+            logger.info("Database: The blog is successfully added to database")
         except Exception:
             db.session.rollback()
             logger.exception(
-                f"Database Error: Failed to update last name for user '{self.username}'",
+                "Database Error: Failed to add the blog to database",
             )
             raise
 
-    def update_bio(self, bio: str) -> None:
-        logger.info(f"Database: Updating bio for user '{self.username}'")
+
+class Post(db.Model):  # ty: ignore[unsupported-base]
+    __tablename__ = "posts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    blog_id: Mapped[int] = mapped_column(
+        db.ForeignKey("blogs.id"),
+        nullable=False,
+    )
+
+    user_id: Mapped[int] = mapped_column(
+        db.ForeignKey("users.id"),
+        nullable=False,
+    )
+
+    title: Mapped[str] = mapped_column(
+        nullable=False,
+    )
+
+    content: Mapped[str] = mapped_column(
+        db.Text,
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    blog: Mapped[Blog] = relationship(
+        back_populates="posts",
+    )
+
+    user: Mapped[User] = relationship(
+        back_populates="posts",
+    )
+
+    def add_post_to_db(self) -> None:
+        logger.info(f"Database: Adding post '{self.title}' to database")
         try:
-            self.bio = bio
+            db.session.add(self)
             db.session.commit()
-            logger.info(f"Database: Bio update committed successfully for user '{self.username}'")
+            logger.info(f"Database: Post '{self.title}' successfully added with ID={self.id}")
         except Exception:
             db.session.rollback()
-            logger.exception(
-                f"Database Error: Failed to update bio for user '{self.username}'",
-            )
+            logger.exception(f"Database Error: Failed to add post '{self.title}' to database")
+            raise
+
+    @staticmethod
+    def get_post_by_id(post_id: int) -> Post | None:
+        return db.session.scalar(db.select(Post).filter_by(id=post_id))
+
+    def delete_post_from_db(self) -> None:
+        logger.info(f"Database: Deleting post '{self.title}' (ID={self.id})")
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            logger.info(f"Database: Post '{self.title}' successfully deleted")
+        except Exception:
+            db.session.rollback()
+            logger.exception(f"Database Error: Failed to delete post '{self.title}'")
             raise

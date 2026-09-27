@@ -3,7 +3,12 @@ import logging
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField, FileSize
-from wtforms.fields.simple import BooleanField, PasswordField, StringField, SubmitField
+from wtforms.fields.simple import (
+    BooleanField,
+    PasswordField,
+    StringField,
+    SubmitField,
+)
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, ValidationError
 
 from app.database.models import User
@@ -30,28 +35,6 @@ class UserLoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired(), Length(min=8)])
     remember = BooleanField("Remember me")
     submit = SubmitField(label=("Sign In"))
-
-    def validate_email(self, username: StringField) -> None:
-        logger.debug(f"Form Validation: Checking user identifier '{username.data}' for login")
-        username = username.data.strip().lower()
-        user = User.get_user_from_db_by_email(email=username) or User.get_user_from_db_by_username(
-            username=username
-        )
-        if not user:
-            logger.warning(
-                f"Form Validation Failed: User with identifier '{username}' not found in database"
-            )
-            raise ValidationError("Invalid username or email.")
-
-    def validate_password(self, password: PasswordField) -> None:
-        login = self.email.data.strip().lower()
-        logger.debug(f"Form Validation: Verifying password for '{login}'")
-        user = User.get_user_from_db_by_email(email=login) or User.get_user_from_db_by_username(
-            username=login
-        )
-        if not user or not check_password(user.password, password.data):
-            logger.warning(f"Form Validation Failed: Incorrect password attempt for '{login}'")
-            raise ValidationError("Invalid password.")
 
 
 class UserRegistrationForm(FlaskForm):
@@ -112,16 +95,14 @@ class UserChangePasswordForm(FlaskForm):
         logger.debug(
             f"Form Validation: Verifying current password for user '{current_user.username}'"
         )
-        user = User.get_user_from_db_by_username(username=current_user.username)
-        if not user or not check_password(user.password, current_password.data):
+        if not check_password(current_user.password, current_password.data):
             logger.warning(
                 f"Form Validation Failed: Incorrect current password entered for user '{current_user.username}'"
             )
             raise ValidationError("Current password is incorrect.")
 
     def validate_new_password(self, new_password: PasswordField) -> None:
-        user = User.get_user_from_db_by_username(username=current_user.username)
-        if user and check_password(user.password, new_password.data):
+        if check_password(current_user.password, new_password.data):
             logger.warning(
                 f"Form Validation Failed: User '{current_user.username}' entered existing password as new password"
             )
@@ -140,7 +121,7 @@ class UserUpdateProfilePictureForm(FlaskForm):
 
 
 class UserProfileInfoForm(FlaskForm):
-    first_name = StringField("First Name", validators=[Length(max=100)])
-    last_name = StringField("Last Name", validators=[Length(max=100)])
+    first_name = StringField("First Name", validators=[DataRequired(), Length(max=100)])
+    last_name = StringField("Last Name", validators=[DataRequired(), Length(max=100)])
     bio = StringField("Bio", validators=[Length(max=100)])
     submit = SubmitField(label=("Submit"))

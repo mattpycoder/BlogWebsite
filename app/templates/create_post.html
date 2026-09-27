@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Post — BlogHub{% endblock %}
+
+{% block extra_css %}
+<!-- Quill Rich Text Editor Stylesheet -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    .editor-page-wrapper {
+        max-width: 960px;
+        margin: 2.5rem auto 4rem auto;
+        padding: 0 1.5rem;
+    }
+
+    .editor-header {
+        margin-bottom: 2rem;
+    }
+
+    .editor-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+    }
+
+    .editor-breadcrumb a {
+        color: var(--primary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+    }
+
+    .editor-breadcrumb a:hover {
+        text-decoration: underline;
+    }
+
+    .editor-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .editor-page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-main);
+        letter-spacing: -0.025em;
+    }
+
+    .editor-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 2.25rem;
+    }
+
+    .editor-meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .editor-meta-grid {
+            grid-template-columns: 1fr;
+        }
+        .editor-card {
+            padding: 1.5rem;
+        }
+    }
+
+    /* Custom Quill Styling */
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: var(--radius-md);
+        border-top-right-radius: var(--radius-md);
+        border-color: var(--border);
+        background: var(--bg-surface);
+        padding: 0.75rem 1rem;
+    }
+
+    .ql-container.ql-snow {
+        border-bottom-left-radius: var(--radius-md);
+        border-bottom-right-radius: var(--radius-md);
+        border-color: var(--border);
+        font-family: inherit;
+        font-size: 1.05rem;
+        line-height: 1.7;
+        background: var(--bg-card);
+    }
+
+    .ql-editor {
+        min-height: 380px;
+        padding: 1.25rem 1.5rem;
+        color: var(--text-main);
+    }
+
+    .ql-editor.ql-blank::before {
+        color: var(--text-light);
+        font-style: normal;
+    }
+
+    .ql-snow.ql-toolbar button:hover,
+    .ql-snow .ql-toolbar button:hover,
+    .ql-snow.ql-toolbar button:focus,
+    .ql-snow .ql-toolbar button:focus,
+    .ql-snow.ql-toolbar button.ql-active,
+    .ql-snow .ql-toolbar button.ql-active,
+    .ql-snow.ql-toolbar .ql-picker-label:hover,
+    .ql-snow .ql-toolbar .ql-picker-label.ql-active,
+    .ql-snow.ql-toolbar .ql-picker-item:hover,
+    .ql-snow .ql-toolbar .ql-picker-item.ql-selected {
+        color: var(--primary) !important;
+    }
+
+    .ql-snow.ql-toolbar button:hover .ql-stroke,
+    .ql-snow.ql-toolbar button.ql-active .ql-stroke,
+    .ql-snow.ql-toolbar .ql-picker-label:hover .ql-stroke,
+    .ql-snow.ql-toolbar .ql-picker-label.ql-active .ql-stroke {
+        stroke: var(--primary) !important;
+    }
+
+    .ql-snow.ql-toolbar button:hover .ql-fill,
+    .ql-snow.ql-toolbar button.ql-active .ql-fill {
+        fill: var(--primary) !important;
+    }
+
+    .editor-status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .editor-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="editor-page-wrapper">
+    <!-- Header / Breadcrumb -->
+    <div class="editor-header">
+        <div class="editor-breadcrumb">
+            <a href="{{ url_for('profile.profile', username=current_user.username) }}">Profile</a>
+            <span>/</span>
+            <span>Write New Post</span>
+        </div>
+        <div class="editor-title-row">
+            <h1 class="editor-page-title">Create Story or Article</h1>
+        </div>
+    </div>
+
+    <!-- Error Alert Banner -->
+    {% if form and form.errors %}
+    <div class="alert alert-danger" role="alert" style="margin-bottom: 1.5rem;">
+        <div>
+            {% for field, errors in form.errors.items() %}
+            <div>{{ ', '.join(errors) }}</div>
+            {% endfor %}
+        </div>
+        <button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close alert">×</button>
+    </div>
+    {% endif %}
+
+    <!-- Editor Card Container -->
+    <div class="editor-card">
+        <form id="post-editor-form" method="POST" action="{{ url_for('posts.create_post') }}" novalidate>
+            {{ form.csrf_token }}
+
+            <div class="editor-meta-grid">
+                <!-- Select Blog -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="blog_id">
+                        Target Blog <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.blog_id(class="form-control" + (" is-invalid" if form.blog_id.errors else ""), id="blog_id") }}
+                    {% if form.blog_id.errors %}
+                        <div class="form-error">{{ form.blog_id.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Post Title -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="title">
+                        Post Title <span style="color: var(--danger);">*</span>
+                    </label>
+                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), id="title", placeholder="e.g. Scaling Flask Applications with Async Task Queues") }}
+                    {% if form.title.errors %}
+                        <div class="form-error">{{ form.title.errors[0] }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Hidden Content Field for WTForms submission -->
+            {{ form.content(id="hidden_content", style="display: none;") }}
+
+            <!-- Rich Text Editor Container -->
+            <div class="form-group" style="margin-top: 1.5rem; margin-bottom: 0;">
+                <label class="form-label">
+                    Article Content <span style="color: var(--danger);">*</span>
+                </label>
+                <div id="quill-editor"></div>
+                
+                <div class="editor-status-bar">
+                    <span id="word-count-display">0 words</span>
+                    <span>Supports formatted text, headings, code blocks, images & links</span>
+                </div>
+
+                {% if form.content.errors %}
+                    <div class="form-error" style="margin-top: 0.5rem;">{{ form.content.errors[0] }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="editor-actions">
+                <a href="{{ url_for('profile.profile', username=current_user.username) }}" class="btn btn-outline">
+                    Discard
+                </a>
+                <button type="submit" id="publish-submit-btn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Publish Post
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<!-- Quill Rich Text Editor Library -->
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Quill Editor with Full Snow Toolbar
+        const quill = new Quill('#quill-editor', {
+            theme: 'snow',
+            placeholder: 'Start writing your story, technical guide, or thoughts here...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['blockquote', 'code-block'],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    [{ 'indent': '-1' }, { 'indent': '+1' }],
+                    [{ 'align': [] }],
+                    ['link', 'image'],
+                    ['clean']
+                ]
+            }
+        });
+
+        const hiddenInput = document.getElementById('hidden_content');
+        const form = document.getElementById('post-editor-form');
+        const wordCountDisplay = document.getElementById('word-count-display');
+
+        // Restore initial content if form is reloaded upon validation error
+        if (hiddenInput && hiddenInput.value) {
+            quill.root.innerHTML = hiddenInput.value;
+            updateWordCount();
+        }
+
+        // Real-time Word & Character Counter
+        function updateWordCount() {
+            const text = quill.getText().trim();
+            const words = text.length > 0 ? text.split(/\s+/).length : 0;
+            const chars = text.length;
+            if (wordCountDisplay) {
+                wordCountDisplay.textContent = `${words} ${words === 1 ? 'word' : 'words'} • ${chars} chars`;
+            }
+        }
+
+        quill.on('text-change', function () {
+            updateWordCount();
+        });
+
+        // Sync Quill HTML content into hidden textarea on submit
+        if (form && hiddenInput) {
+            form.addEventListener('submit', function (e) {
+                const rawText = quill.getText().trim();
+                // If editor is completely empty, send empty string so WTForms validation fires properly
+                if (rawText.length === 0 && !quill.root.querySelector('img')) {
+                    hiddenInput.value = '';
+                } else {
+                    hiddenInput.value = quill.root.innerHTML;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

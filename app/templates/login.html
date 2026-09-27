@@ -12,14 +12,7 @@
                 <p class="auth-subtitle">Sign in to access your blogs and personalized feed.</p>
             </div>
 
-            {% if form and form.errors %}
-                <div class="alert alert-danger" role="alert">
-                    <span>Invalid username/email or password.</span>
-                    <button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close alert">×</button>
-                </div>
-            {% endif %}
-
-            <form class="auth-form" method="POST" action="/login" novalidate>
+            <form class="auth-form" method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
                 {% if form %}
                     {{ form.csrf_token() }}
                 {% else %}
@@ -33,6 +26,9 @@
                         {{ form.email(class="form-control", id="email", placeholder="Enter username or email", autocomplete="username email") }}
                     {% else %}
                         <input type="text" class="form-control" id="email" name="email" placeholder="Enter username or email" required autocomplete="username email">
+                    {% endif %}
+                    {% if form and form.email.errors %}
+                    <div class="form-error">{{ form.email.errors[0] }}</div>
                     {% endif %}
                 </div>
 
@@ -52,6 +48,9 @@
                             </svg>
                         </button>
                     </div>
+                    {% if form and form.password.errors %}
+                        <div class="form-error">{{ form.password.errors[0] }}</div>
+                        {% endif %}
                 </div>
 
                 <!-- Remember Me & Forgot Password -->

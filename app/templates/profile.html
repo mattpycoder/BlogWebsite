@@ -22,9 +22,9 @@ PROFILE USER & PERMISSIONS
             <div class="profile-identity-group">
                 <div class="profile-avatar-wrapper">
                     <div class="profile-avatar-lg" id="profile-avatar-display">
-                        {% if profile_picture_url %}
+                        {% if profile_user.profile_picture %}
                         <img
-                                src="{{ profile_picture_url }}"
+                                src="{{ profile_user.profile_picture_url }}"
                                 alt="{{ profile_user.username }}'s profile picture"
                         >
                         {% elif profile_user and profile_user.username %}
@@ -36,7 +36,7 @@ PROFILE USER & PERMISSIONS
 
                     {% if is_owner %}
                     <!-- Upload Photo Form -->
-                    <form id="avatar_upload_form" method="POST" action="{{url_for('profile.update_profile_picture')}}"
+                    <form id="avatar_upload_form" method="POST" action="{{url_for('profile.update_profile_picture', username=current_user.username)}}"
                           enctype="multipart/form-data" style="display: none;" novalidate>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="file" id="avatar_file_input" name="profile_picture" accept="image/*"
@@ -109,11 +109,11 @@ PROFILE USER & PERMISSIONS
             <div class="profile-actions-stack">
                 <div class="profile-stats-bar">
                     <div class="profile-stat-item">
-                        <div class="profile-stat-number" id="stats-blogs-count">2</div>
+                        <div class="profile-stat-number" id="stats-blogs-count">{{ blogs|length if blogs else 0 }}</div>
                         <div class="profile-stat-label">Blogs</div>
                     </div>
                     <div class="profile-stat-item">
-                        <div class="profile-stat-number" id="stats-posts-count">6</div>
+                        <div class="profile-stat-number" id="stats-posts-count">{{ posts|length if posts else 0 }}</div>
                         <div class="profile-stat-label">Posts</div>
                     </div>
                     <div class="profile-stat-item">
@@ -132,13 +132,13 @@ PROFILE USER & PERMISSIONS
                         </svg>
                         New Blog
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="openModal('create-post-modal')">
+                    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary btn-sm">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 5v14M5 12h14"></path>
                         </svg>
                         New Post
-                    </button>
+                    </a>
                 </div>
                 {% endif %}
             </div>
@@ -158,7 +158,7 @@ PROFILE USER & PERMISSIONS
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
             Blogs
-            <span class="tab-badge">2</span>
+            <span class="tab-badge">{{ blogs|length }}</span>
         </button>
 
         <button type="button" class="profile-tab-btn {{ 'active' if current_tab == 'posts-tab' else '' }}"
@@ -172,20 +172,10 @@ PROFILE USER & PERMISSIONS
                 <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
             All Posts
-            <span class="tab-badge">4</span>
+            <span class="tab-badge">{{ posts|length if posts else 0 }}</span>
         </button>
 
         {% if is_owner %}
-        <button type="button" class="profile-tab-btn {{ 'active' if current_tab == 'bookmarks-tab' else '' }}"
-                id="tab-btn-bookmarks" onclick="switchProfileTab('bookmarks-tab')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-            </svg>
-            Saved Bookmarks
-            <span class="tab-badge">2</span>
-        </button>
-
         <button type="button" class="profile-tab-btn {{ 'active' if current_tab == 'settings-tab' else '' }}"
                 id="tab-btn-settings" onclick="switchProfileTab('settings-tab')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -203,108 +193,64 @@ PROFILE USER & PERMISSIONS
          ===================================================== -->
     <section id="blogs-tab" class="profile-tab-content {{ 'active' if current_tab == 'blogs-tab' else '' }}">
         <div class="blogs-grid">
-            <!-- Blog 1 -->
-            <article class="blog-manage-card" data-blog-id="1">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                        <span class="blog-badge-tag">📁 Engineering & Architecture</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">2 Posts</span>
+            {% if blogs and blogs|length > 0 %}
+                {% for blog in blogs %}
+                <article class="blog-manage-card" data-blog-id="{{ blog.id }}">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                            <span class="blog-badge-tag">📁 {{ blog.category }}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                {{ blog.posts|length if blog.posts else 0 }} {{ 'Post' if (blog.posts|length == 1) else 'Posts' }}
+                            </span>
+                        </div>
+
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">
+                            {{ blog.title }}
+                        </h3>
+
+                        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+                            {{ blog.description }}
+                        </p>
                     </div>
 
-                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">
-                        Backend Systems & Python
-                    </h3>
+                    <div class="blog-manage-actions">
+                        <button type="button" class="btn btn-outline btn-sm"
+                                onclick="filterPostsByBlog('{{ blog.title|e }}')">
+                            View Posts ({{ blog.posts|length if blog.posts else 0 }})
+                        </button>
 
-                    <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
-                        Explorations in Python, Flask, SQLAlchemy optimizations, and distributed application structures.
-                    </p>
-                </div>
-
-                <div class="blog-manage-actions">
-                    <button type="button" class="btn btn-outline btn-sm"
-                            onclick="filterPostsByBlog('Backend Systems & Python')">
-                        View Posts (2)
-                    </button>
-
-                    {% if is_owner %}
-                    <button type="button" class="btn-action-icon" title="Create post in this blog"
-                            onclick="openCreatePostModalForBlog('Backend Systems & Python')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 5v14M5 12h14"></path>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn-action-icon" title="Edit Blog Details"
-                            onclick="openModal('create-blog-modal')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 20h9"></path>
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn-action-icon btn-danger-hover" title="Delete Blog"
-                            onclick="confirmDeleteBlog('Backend Systems & Python')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                    {% endif %}
-                </div>
-            </article>
-
-            <!-- Blog 2 -->
-            <article class="blog-manage-card" data-blog-id="2">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                        <span class="blog-badge-tag">🎨 UI/UX & Web</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">2 Posts</span>
+                        {% if is_owner %}
+                        <a href="{{ url_for('posts.create_post', blog_id=blog.id) }}" class="btn-action-icon" title="Create post in this blog">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14M5 12h14"></path>
+                            </svg>
+                        </a>
+                        <button type="button" class="btn-action-icon" title="Edit Blog Details"
+                                onclick="openModal('create-blog-modal')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 20h9"></path>
+                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                            </svg>
+                        </button>
+                        <button type="button" class="btn-action-icon btn-danger-hover" title="Delete Blog"
+                                onclick="confirmDeleteBlog('{{ blog.title|e }}')">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                        {% endif %}
                     </div>
-
-                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">
-                        Interface & Interaction Notes
-                    </h3>
-
-                    <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
-                        Thoughts on designing delightful developer experiences, sleek dark modes, and
-                        micro-interactions.
-                    </p>
+                </article>
+                {% endfor %}
+            {% elif not is_owner %}
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                    <p>No blogs created yet.</p>
                 </div>
-
-                <div class="blog-manage-actions">
-                    <button type="button" class="btn btn-outline btn-sm"
-                            onclick="filterPostsByBlog('Interface & Interaction Notes')">
-                        View Posts (2)
-                    </button>
-
-                    {% if is_owner %}
-                    <button type="button" class="btn-action-icon" title="Create post in this blog"
-                            onclick="openCreatePostModalForBlog('Interface & Interaction Notes')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 5v14M5 12h14"></path>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn-action-icon" title="Edit Blog Details"
-                            onclick="openModal('create-blog-modal')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 20h9"></path>
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l1-4L16.5 3.5z"></path>
-                        </svg>
-                    </button>
-                    <button type="button" class="btn-action-icon btn-danger-hover" title="Delete Blog"
-                            onclick="confirmDeleteBlog('Interface & Interaction Notes')">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                    {% endif %}
-                </div>
-            </article>
+            {% endif %}
 
             {% if is_owner %}
             <!-- Create New Blog Placeholder Card -->
@@ -335,199 +281,75 @@ PROFILE USER & PERMISSIONS
                     Filter by Blog:
                 </label>
                 <select id="blogFilterSelect" class="blog-select-filter" onchange="filterPostsByBlog(this.value)">
-                    <option value="all">All Blogs (4 Posts)</option>
-                    <option value="Backend Systems & Python">Backend Systems & Python (2)</option>
-                    <option value="Interface & Interaction Notes">Interface & Interaction Notes (2)</option>
+                    <option value="all">All Blogs ({{ posts|length if posts else 0 }} Posts)</option>
+                    {% for blog in blogs %}
+                    <option value="{{ blog.title }}">{{ blog.title }} ({{ blog.posts|length if blog.posts else 0 }})</option>
+                    {% endfor %}
                 </select>
             </div>
 
             {% if is_owner %}
-            <button type="button" class="btn btn-primary btn-sm" onclick="openModal('create-post-modal')">
+            <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary btn-sm">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                      stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 5v14M5 12h14"></path>
                 </svg>
                 Add Post
-            </button>
+            </a>
             {% endif %}
         </div>
 
         <div class="posts-grid" id="posts-list-container">
-            <!-- Post 1 -->
-            <article class="post-card" data-blog-name="Backend Systems & Python">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                        <span class="post-card-tag">📁 Backend Systems & Python</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Aug 24, 2026</span>
+            {% if posts and posts|length > 0 %}
+                {% for post in posts %}
+                <article class="post-card" data-blog-name="{{ post.blog.title if post.blog else '' }}">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                            <span class="post-card-tag">📁 {{ post.blog.title if post.blog else 'General' }}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                                {{ post.created_at.strftime('%b %d, %Y') if post.created_at else '' }}
+                            </span>
+                        </div>
+
+                        <h3 class="post-title">
+                            <a href="{{ url_for('posts.view_post', post_id=post.id) }}">{{ post.title }}</a>
+                        </h3>
+
+                        <p class="post-desc">
+                            {{ post.content | striptags | truncate(140) }}
+                        </p>
                     </div>
 
-                    <h3 class="post-title">
-                        <a href="/post/1">Building Scalable Web Applications with Flask and HTMX</a>
-                    </h3>
+                    <div class="post-meta-stats">
+                        <span>{{ ((post.content|striptags|wordcount / 200)|round(0, 'ceil')|int) or 1 }} min read</span>
 
-                    <p class="post-desc">
-                        A practical guide to building responsive, modern, interactive web applications using lightweight
-                        backend rendering and hypermedia controls.
-                    </p>
-                </div>
-
-                <div class="post-meta-stats">
-                    <span>5 min read</span>
-                    <span style="margin-left: auto;">❤️ 42 likes</span>
-
+                        {% if is_owner %}
+                        <div class="post-owner-actions" style="margin-left: auto;">
+                            <form method="POST" action="{{ url_for('posts.delete_post', post_id=post.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this post?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-action-icon btn-danger-hover" title="Delete Post">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            {% else %}
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3.5rem 1.5rem; color: var(--text-muted);">
+                    <p style="font-size: 1.05rem; margin-bottom: 1rem;">No posts published yet.</p>
                     {% if is_owner %}
-                    <div class="post-owner-actions">
-                        <button type="button" class="btn-action-icon" title="Edit Post" onclick="alert('Edit post')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 20h9"></path>
-                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                            </svg>
-                        </button>
-                        <button type="button" class="btn-action-icon btn-danger-hover" title="Delete Post"
-                                onclick="confirmDeletePost('Building Scalable Web Applications with Flask and HTMX')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
+                    <a href="{{ url_for('posts.create_post') }}" class="btn btn-primary btn-sm">
+                        Write Your First Post
+                    </a>
                     {% endif %}
                 </div>
-            </article>
-
-            <!-- Post 2 -->
-            <article class="post-card" data-blog-name="Backend Systems & Python">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                        <span class="post-card-tag">📁 Backend Systems & Python</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Aug 18, 2026</span>
-                    </div>
-
-                    <h3 class="post-title">
-                        <a href="/post/2">Clean Architecture in Python: Tips and Patterns</a>
-                    </h3>
-
-                    <p class="post-desc">
-                        Organizing routes, models, services, and schemas for maintainable growth and zero circular
-                        dependencies.
-                    </p>
-                </div>
-
-                <div class="post-meta-stats">
-                    <span>8 min read</span>
-                    <span style="margin-left: auto;">❤️ 31 likes</span>
-
-                    {% if is_owner %}
-                    <div class="post-owner-actions">
-                        <button type="button" class="btn-action-icon" title="Edit Post" onclick="alert('Edit post')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 20h9"></path>
-                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                            </svg>
-                        </button>
-                        <button type="button" class="btn-action-icon btn-danger-hover" title="Delete Post"
-                                onclick="confirmDeletePost('Clean Architecture in Python: Tips and Patterns')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </article>
-
-            <!-- Post 3 -->
-            <article class="post-card" data-blog-name="Interface & Interaction Notes">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                        <span class="post-card-tag">🎨 Interface & Interaction Notes</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Aug 14, 2026</span>
-                    </div>
-
-                    <h3 class="post-title">
-                        <a href="/post/3">Designing Component States: Hover, Focus, & Active</a>
-                    </h3>
-
-                    <p class="post-desc">
-                        How subtle state indicators and accessible focus rings dramatically improve overall user
-                        satisfaction and confidence.
-                    </p>
-                </div>
-
-                <div class="post-meta-stats">
-                    <span>4 min read</span>
-                    <span style="margin-left: auto;">❤️ 56 likes</span>
-
-                    {% if is_owner %}
-                    <div class="post-owner-actions">
-                        <button type="button" class="btn-action-icon" title="Edit Post" onclick="alert('Edit post')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 20h9"></path>
-                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                            </svg>
-                        </button>
-                        <button type="button" class="btn-action-icon btn-danger-hover" title="Delete Post"
-                                onclick="confirmDeletePost('Designing Component States: Hover, Focus, & Active')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </article>
-
-            <!-- Post 4 -->
-            <article class="post-card" data-blog-name="Interface & Interaction Notes">
-                <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-                        <span class="post-card-tag">🎨 Interface & Interaction Notes</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Aug 10, 2026</span>
-                    </div>
-
-                    <h3 class="post-title">
-                        <a href="/post/4">Micro-Animations and Fluid Page Transitions</a>
-                    </h3>
-
-                    <p class="post-desc">
-                        A look into zero-dependency CSS transitions and smooth UI feedback techniques for web
-                        applications.
-                    </p>
-                </div>
-
-                <div class="post-meta-stats">
-                    <span>6 min read</span>
-                    <span style="margin-left: auto;">❤️ 78 likes</span>
-
-                    {% if is_owner %}
-                    <div class="post-owner-actions">
-                        <button type="button" class="btn-action-icon" title="Edit Post" onclick="alert('Edit post')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 20h9"></path>
-                                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                            </svg>
-                        </button>
-                        <button type="button" class="btn-action-icon btn-danger-hover" title="Delete Post"
-                                onclick="confirmDeletePost('Micro-Animations and Fluid Page Transitions')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </article>
+            {% endif %}
         </div>
     </section>
 
@@ -596,7 +418,7 @@ PROFILE USER & PERMISSIONS
             <div class="settings-card">
                 <h2 class="settings-card-title">Personal Details</h2>
 
-                <form class="auth-form" method="POST" action="{{url_for('profile.update_profile_info')}}"
+                <form class="auth-form" method="POST" action="{{url_for('profile.update_profile_info', username=current_user.username)}}"
                       enctype="multipart/form-data" novalidate>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -653,7 +475,7 @@ PROFILE USER & PERMISSIONS
                                   placeholder="Tell the community a little about yourself...">{{ current_user.bio if current_user.bio else '' }}</textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; align-self: flex-start;">
+                    <button type="submit" id="save-profile-btn" class="btn btn-primary" style="margin-top: 0.5rem; align-self: flex-start;" disabled>
                         Save Changes
                     </button>
                 </form>
@@ -664,20 +486,7 @@ PROFILE USER & PERMISSIONS
                 <h2 class="settings-card-title">Security & Password</h2>
                 <p class="settings-card-subtitle">Ensure your account is protected with a secure password.</p>
 
-                {% if change_password_form and change_password_form.errors %}
-                <div class="alert alert-danger" role="alert">
-                    <div>
-                        {% for field, errors in change_password_form.errors.items() %}
-                        <div>{{ ', '.join(errors) }}</div>
-                        {% endfor %}
-                    </div>
-                    <button type="button" class="alert-close" onclick="this.parentElement.remove()"
-                            aria-label="Close alert">×
-                    </button>
-                </div>
-                {% endif %}
-
-                <form class="auth-form" method="POST" action="{{ url_for('profile.change_password') }}" novalidate>
+                <form class="auth-form" method="POST" action="{{ url_for('profile.change_password', username=current_user.username) }}" novalidate>
                     {% if change_password_form %}
                     {{ change_password_form.csrf_token() }}
                     {% else %}
@@ -716,8 +525,7 @@ PROFILE USER & PERMISSIONS
                         <div class="input-with-icon">
                             {% if change_password_form and change_password_form.new_password %}
                             {{ change_password_form.new_password(class="form-control" + (" is-invalid" if
-                            change_password_form.new_password.errors else ""), id="new_password", placeholder="At least
-                            8 characters") }}
+                            change_password_form.new_password.errors else ""), id="new_password", placeholder="At least 8 characters") }}
                             {% else %}
                             <input type="password" class="form-control" id="new_password" name="new_password"
                                    placeholder="At least 8 characters" required>
@@ -792,32 +600,68 @@ PROFILE USER & PERMISSIONS
      ========================================================= -->
 {% if is_owner %}
 <!-- Create Blog Modal -->
-<div id="create-blog-modal" class="modal-overlay" onclick="closeModalOnOutsideClick(event, 'create-blog-modal')">
+<div id="create-blog-modal" class="modal-overlay {{ 'active' if create_blog_form and create_blog_form.errors else '' }}" onclick="closeModalOnOutsideClick(event, 'create-blog-modal')">
     <div class="modal-container">
         <div class="modal-header">
             <h3 class="modal-title">Create New Blog</h3>
             <button type="button" class="alert-close" onclick="closeModal('create-blog-modal')">×</button>
         </div>
 
-        <form class="auth-form" method="POST" action="/blog/create" novalidate>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if create_blog_form and create_blog_form.errors %}
+        <div class="alert alert-danger" role="alert">
+            <div>
+                {% for field, errors in create_blog_form.errors.items() %}
+                <div>{{ ', '.join(errors) }}</div>
+                {% endfor %}
+            </div>
+            <button type="button" class="alert-close" onclick="this.parentElement.remove()" aria-label="Close alert">×</button>
+        </div>
+        {% endif %}
+
+        <form class="auth-form" method="POST" action="{{ url_for('blogs.create_blog', username=current_user.username) }}" novalidate>
+            {% if create_blog_form %}
+                {{ create_blog_form.csrf_token() }}
+            {% else %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
 
             <div class="form-group">
                 <label class="form-label" for="blog_title">Blog Title</label>
-                <input type="text" class="form-control" id="blog_title" name="title"
-                       placeholder="e.g. Machine Learning Systems, Frontend Crafts" required>
+                {% if create_blog_form and create_blog_form.title %}
+                    {{ create_blog_form.title(class="form-control" + (" is-invalid" if create_blog_form.title.errors else ""), id="blog_title", placeholder="e.g. Machine Learning Systems, Frontend Crafts") }}
+                {% else %}
+                    <input type="text" class="form-control" id="blog_title" name="title"
+                           placeholder="e.g. Machine Learning Systems, Frontend Crafts" required>
+                {% endif %}
+                {% if create_blog_form and create_blog_form.title.errors %}
+                    <div class="form-error">{{ create_blog_form.title.errors[0] }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="blog_category">Category / Topic Tag</label>
-                <input type="text" class="form-control" id="blog_category" name="category"
-                       placeholder="e.g. AI & Data, Web Development, Design">
+                {% if create_blog_form and create_blog_form.category %}
+                    {{ create_blog_form.category(class="form-control" + (" is-invalid" if create_blog_form.category.errors else ""), id="blog_category", placeholder="e.g. AI & Data, Web Development, Design") }}
+                {% else %}
+                    <input type="text" class="form-control" id="blog_category" name="category"
+                           placeholder="e.g. AI & Data, Web Development, Design">
+                {% endif %}
+                {% if create_blog_form and create_blog_form.category.errors %}
+                    <div class="form-error">{{ create_blog_form.category.errors[0] }}</div>
+                {% endif %}
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="blog_description">Blog Description</label>
-                <textarea class="form-control" id="blog_description" name="description" rows="3"
-                          placeholder="What is this blog about? Describe the theme or topic..."></textarea>
+                {% if create_blog_form and create_blog_form.description %}
+                    {{ create_blog_form.description(class="form-control" + (" is-invalid" if create_blog_form.description.errors else ""), id="blog_description", rows="3", placeholder="What is this blog about? Describe the theme or topic...") }}
+                {% else %}
+                    <textarea class="form-control" id="blog_description" name="description" rows="3"
+                              placeholder="What is this blog about? Describe the theme or topic..."></textarea>
+                {% endif %}
+                {% if create_blog_form and create_blog_form.description.errors %}
+                    <div class="form-error">{{ create_blog_form.description.errors[0] }}</div>
+                {% endif %}
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
@@ -843,8 +687,9 @@ PROFILE USER & PERMISSIONS
                 <label class="form-label" for="post_target_blog">Select Blog</label>
                 <select id="post_target_blog" name="blog_id" class="form-control" required>
                     <option value="" disabled selected>-- Choose a Blog to post in --</option>
-                    <option value="1">Backend Systems & Python</option>
-                    <option value="2">Interface & Interaction Notes</option>
+                    {% for blog in blogs %}
+                    <option value="{{ blog.id }}">{{ blog.title }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
@@ -889,7 +734,7 @@ PROFILE USER & PERMISSIONS
             <strong>deleted forever</strong>. This action cannot be undone.
         </p>
 
-        <form method="POST" action="{{url_for('profile.delete_account')}}"
+        <form method="POST" action="{{url_for('profile.delete_account', username=current_user.username)}}"
               style="display: flex; gap: 0.75rem; justify-content: center;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('delete-account-modal')">
@@ -922,7 +767,7 @@ PROFILE USER & PERMISSIONS
             Are you sure you want to delete your profile picture? Your initials will be displayed instead.
         </p>
 
-        <form method="POST" action="{{url_for('profile.delete_profile_picture')}}"
+        <form method="POST" action="{{url_for('profile.delete_profile_picture', username=current_user.username)}}"
               style="display: flex; gap: 0.75rem; justify-content: center;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('delete-photo-modal')">
@@ -1103,5 +948,46 @@ PROFILE USER & PERMISSIONS
         if (previewBox) previewBox.textContent = initial;
         if (heroAvatar) heroAvatar.textContent = initial;
     }
+
+    /* Personal Details Form Validation & Dynamic Button State */
+    document.addEventListener('DOMContentLoaded', function () {
+        const firstNameInput = document.getElementById('first_name');
+        const lastNameInput = document.getElementById('last_name');
+        const bioInput = document.getElementById('bio');
+        const saveBtn = document.getElementById('save-profile-btn');
+
+        if (!firstNameInput || !lastNameInput || !bioInput || !saveBtn) return;
+
+        // Store initial values loaded from backend
+        const initialFirstName = firstNameInput.value.trim();
+        const initialLastName = lastNameInput.value.trim();
+        const initialBio = bioInput.value.trim();
+
+        function validateProfileDetailsForm() {
+            const currentFirstName = firstNameInput.value.trim();
+            const currentLastName = lastNameInput.value.trim();
+            const currentBio = bioInput.value.trim();
+
+            // First name and last name cannot be empty
+            const hasValidNames = currentFirstName.length > 0 && currentLastName.length > 0;
+
+            // At least one field must differ from the initial saved data
+            const hasChanges = (
+                currentFirstName !== initialFirstName ||
+                currentLastName !== initialLastName ||
+                currentBio !== initialBio
+            );
+
+            // Enable only if valid names exist AND at least one field is modified
+            saveBtn.disabled = !(hasValidNames && hasChanges);
+        }
+
+        firstNameInput.addEventListener('input', validateProfileDetailsForm);
+        lastNameInput.addEventListener('input', validateProfileDetailsForm);
+        bioInput.addEventListener('input', validateProfileDetailsForm);
+
+        // Run validation on initial load
+        validateProfileDetailsForm();
+    });
 </script>
 {% endblock %}
