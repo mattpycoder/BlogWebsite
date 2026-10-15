@@ -59,13 +59,13 @@
                     </div>
                     <form method="POST" action="{{ url_for('auth.logout') }}" style="display: inline;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" name="logout" class="btn btn-text">
+                        <button type="submit" name="logout" class="btn btn-text"
                             Logout
                         </button>
                     </form>
                 {% else %}
-                    <a href="/login" class="btn btn-text">Login</a>
-                    <a href="/register" class="btn btn-primary">Register</a>
+                    <a href="/login" class="btn btn-text" data-qa-name="login-button">Login</a>
+                    <a href="/register" class="btn btn-primary" data-qa-name="register-button">Register</a>
                 {% endif %}
             </div>
         </div>

@@ -1,0 +1,184 @@
+name: BlogWebsite CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Build and Run Tests
+    runs-on: ubuntu-latest
+
+    env:
+      SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_DATABASE_URI }}
+      SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
+      SUPABASE_BUCKET_NAME: ${{ secrets.SUPABASE_BUCKET_NAME }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+    steps:
+      # --------------------------------------------------
+      # Checkout and inspect the repository
+      # --------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify repository files
+        run: |
+          pwd
+          ls -la
+          find . -name 'Dockerfile' -print
+
+      # --------------------------------------------------
+      # Set up Docker
+      # --------------------------------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # --------------------------------------------------
+      # Build the Flask application image
+      # --------------------------------------------------
+      - name: Build Flask application image
+        run: |
+          docker build \
+            --target app \
+            -t blogwebsite:app \
+            .
+
+      # --------------------------------------------------
+      # Build the Playwright autotests image
+      # --------------------------------------------------
+      - name: Build Playwright autotests image
+        run: |
+          docker build \
+            --target autotests \
+            -t blogwebsite:autotests \
+            .
+
+      # --------------------------------------------------
+      # Create a shared Docker network
+      # --------------------------------------------------
+      - name: Create Docker network
+        run: docker network create blogwebsite-network
+
+      # --------------------------------------------------
+      # Start the Flask application
+      # --------------------------------------------------
+      - name: Start Flask application
+        run: |
+          docker run -d \
+            --name blogwebsite \
+            --network blogwebsite-network \
+            --network-alias blogwebsite \
+            -p 5001:5000 \
+            -e SQLALCHEMY_DATABASE_URI="$SQLALCHEMY_DATABASE_URI" \
+            -e SUPABASE_API_KEY="$SUPABASE_API_KEY" \
+            -e SUPABASE_BUCKET_NAME="$SUPABASE_BUCKET_NAME" \
+            -e SECRET_KEY="$SECRET_KEY" \
+            -e SUPABASE_PROJECT_ID="$SUPABASE_PROJECT_ID" \
+            blogwebsite:app
+
+      # --------------------------------------------------
+      # Wait for the application to become available
+      # --------------------------------------------------
+      - name: Wait for Flask application
+        run: |
+          for i in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:5001/ > /dev/null; then
+              echo "Flask application is ready."
+              exit 0
+            fi
+
+            if [ "$(docker inspect -f '{{.State.Running}}' blogwebsite)" != "true" ]; then
+              echo "Flask container exited unexpectedly."
+              docker logs blogwebsite
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          echo "Flask application did not become ready within 120 seconds."
+          docker logs blogwebsite
+          exit 1
+
+      # --------------------------------------------------
+      # Run Playwright autotests
+      # --------------------------------------------------
+      - name: Run Playwright tests
+        run: |
+          mkdir -p allure-results
+
+          docker run --rm \
+            --name blogwebsite-tests \
+            --network blogwebsite-network \
+            -e BASE_URL=http://blogwebsite:5000 \
+            -e SQLALCHEMY_DATABASE_URI="$SQLALCHEMY_DATABASE_URI" \
+            -e SUPABASE_API_KEY="$SUPABASE_API_KEY" \
+            -e SUPABASE_BUCKET_NAME="$SUPABASE_BUCKET_NAME" \
+            -e SECRET_KEY="$SECRET_KEY" \
+            -e SUPABASE_PROJECT_ID="$SUPABASE_PROJECT_ID" \
+            -v "$PWD/allure-results:/app/allure-results" \
+            blogwebsite:autotests \
+            uv run pytest app/autotests/tests \
+              -v \
+              --alluredir=/app/allure-results
+
+      # --------------------------------------------------
+      # Collect diagnostic information
+      # --------------------------------------------------
+      - name: Collect Docker logs
+        if: always()
+        run: |
+          mkdir -p docker-logs
+
+          docker logs blogwebsite \
+            > docker-logs/blogwebsite.log 2>&1 || true
+
+          docker ps -a \
+            > docker-logs/docker-containers.txt 2>&1 || true
+
+          docker images \
+            > docker-logs/docker-images.txt 2>&1 || true
+
+          docker network inspect blogwebsite-network \
+            > docker-logs/docker-network.json 2>&1 || true
+
+      # --------------------------------------------------
+      # Upload Allure test results
+      # --------------------------------------------------
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: allure-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+      # --------------------------------------------------
+      # Upload Docker diagnostics
+      # --------------------------------------------------
+      - name: Upload Docker logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs
+          path: docker-logs/
+          if-no-files-found: warn
+          retention-days: 7
+
+      # --------------------------------------------------
+      # Clean up containers and network
+      # --------------------------------------------------
+      - name: Cleanup Docker resources
+        if: always()
+        run: |
+          docker rm -f blogwebsite 2>/dev/null || true
+          docker rm -f blogwebsite-tests 2>/dev/null || true
+          docker network rm blogwebsite-network 2>/dev/null || true
