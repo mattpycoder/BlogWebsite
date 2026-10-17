@@ -1,3 +1,7 @@
+[blogwebsite.settings]
+debug_locally = false
+headless_mode=true
+
 [project]
 name = "blogwebsite"
 version = "0.1.0"
@@ -24,12 +28,18 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",
-    "pytest>=8.0.0",
     "ruff>=0.12.0",
+    "pytest",
+    "pytest-playwright",
+    "allure-pytest"
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["app/autotests/tests"]
+markers = [
+    "standalone: standalone tests",
+    "priority_0: priority 0 high importance tests",
+]
 
 [tool.ruff]
 line-length = 100
